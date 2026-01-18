@@ -7,7 +7,7 @@ NekoLog（猫トイレ記録アプリ）の実装タスク一覧。各タスク�
 
 ## Tasks
 
-- [ ] 1. リポジトリ初期化と CI 基盤構築
+- [x] 1. リポジトリ初期化と CI 基盤構築
 - [x] 1.1 GitHub パブリックリポジトリの作成とモノレポ基盤セットアップ
   - GitHub にパブリックリポジトリを作成
   - pnpm workspace と Turborepo の初期設定
@@ -16,7 +16,7 @@ NekoLog（猫トイレ記録アプリ）の実装タスク一覧。各タスク�
   - .gitignore、.nvmrc（Node 20）を追加
   - _Requirements: N/A（インフラ基盤）_
 
-- [ ] 1.2 GitHub Actions CI ワークフローの構築（プレースホルダーテスト）
+- [x] 1.2 GitHub Actions CI ワークフローの構築（プレースホルダーテスト）
   - .github/workflows/ci.yml を作成
   - pnpm install と Turborepo キャッシュの設定
   - プレースホルダーとして常に成功する簡単なテストを追加
