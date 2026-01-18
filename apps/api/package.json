@@ -1,0 +1,21 @@
+{
+  "name": "@nekolog/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "echo \"api build placeholder\"",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"placeholder test passed\""
+  },
+  "dependencies": {
+    "@nekolog/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260118.0",
+    "typescript": "^5.7.3",
+    "wrangler": "^3.99.0"
+  }
+}
