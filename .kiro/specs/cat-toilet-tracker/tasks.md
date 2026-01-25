@@ -75,7 +75,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - 未認証リクエストに 401（DomainError.unauthorized）を返す動作を確認
   - _Requirements: WF1, WF2_
 
-- [ ] 3.4 handleDomainError ユーティリティの実装
+- [x] 3.4 handleDomainError ユーティリティの実装
   - DomainError を HTTP レスポンスに変換する関数
   - validation → 400、not_found → 404、unauthorized → 401、confirmation_required → 422、database → 500
   - エラーレスポンスの JSON 形式統一
