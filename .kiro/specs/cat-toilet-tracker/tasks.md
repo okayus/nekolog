@@ -101,7 +101,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - 各ワークフローは ResultAsync<T, DomainError> を返す
   - _Requirements: WF3-6_
 
-- [ ] 4.3 猫管理 API ルートの実装
+- [x] 4.3 猫管理 API ルートの実装
   - GET /api/cats → listCats workflow → match でレスポンス
   - GET /api/cats/:id → getCat workflow → match
   - POST /api/cats → registerCat workflow → match
