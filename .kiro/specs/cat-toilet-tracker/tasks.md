@@ -118,7 +118,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - _Requirements: WF3_
 
 - [ ] 5. トイレ記録ワークフローと API の実装
-- [ ] 5.1 LogRepository の実装
+- [x] 5.1 LogRepository の実装
   - リポジトリインターフェースの定義
   - create: ResultAsync<ToiletLog, DomainError>
   - update: ResultAsync<ToiletLog, DomainError>
