@@ -82,7 +82,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - _Requirements: WF3-11_
 
 - [ ] 4. 猫管理ワークフローと API の実装
-- [ ] 4.1 CatRepository の実装
+- [x] 4.1 CatRepository の実装
   - リポジトリインターフェースの定義
   - create: ResultAsync<Cat, DomainError>
   - update: ResultAsync<Cat, DomainError>
