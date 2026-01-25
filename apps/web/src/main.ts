@@ -5,6 +5,8 @@
  * This is a placeholder that will be replaced with the actual implementation.
  */
 
-import { PACKAGE_NAME } from "@nekolog/shared";
+import { DomainErrors } from "@nekolog/shared";
 
-console.log(`NekoLog Frontend loaded. Using: ${PACKAGE_NAME}`);
+// Placeholder to verify shared package works
+console.log("NekoLog Frontend loaded.");
+console.log("DomainErrors available:", typeof DomainErrors);

@@ -13,9 +13,14 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "echo \"placeholder test passed\""
+    "test": "vitest run"
   },
   "devDependencies": {
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "neverthrow": "^8.2.0",
+    "zod": "^4.3.6"
   }
 }
