@@ -30,6 +30,22 @@ vi.mock("../workflows/cat-workflows", () => ({
   listCats: vi.fn(),
 }));
 
+// Mock the image workflows
+vi.mock("../workflows/image-workflows", () => ({
+  uploadCatImage: vi.fn(),
+  deleteCatImage: vi.fn(),
+}));
+
+// Mock the image storage service
+const mockImageStorage = {
+  upload: vi.fn(),
+  delete: vi.fn(),
+};
+
+vi.mock("../services/image-storage", () => ({
+  createImageStorageService: vi.fn(() => mockImageStorage),
+}));
+
 import { createCatRoutes } from "./cats";
 import { requireAuth } from "../middleware/auth";
 import type { Bindings, Variables } from "../types";
@@ -42,6 +58,7 @@ import {
   getCat,
   listCats,
 } from "../workflows/cat-workflows";
+import { uploadCatImage, deleteCatImage } from "../workflows/image-workflows";
 
 describe("Cat Routes", () => {
   const mockCat = {
@@ -60,6 +77,7 @@ describe("Cat Routes", () => {
   const mockEnv = {
     DB: {} as D1Database,
     BUCKET: {} as R2Bucket,
+    PUBLIC_BUCKET_URL: "https://images.example.com",
     CLERK_SECRET_KEY: "test-secret",
     CLERK_PUBLISHABLE_KEY: "test-publishable",
   };
@@ -338,6 +356,137 @@ describe("Cat Routes", () => {
       expect(res.status).toBe(404);
       const body = (await res.json()) as { error: { type: string } };
       expect(body.error.type).toBe("not_found");
+    });
+  });
+
+  describe("POST /:id/image", () => {
+    it("should upload an image successfully", async () => {
+      const catWithImage = {
+        ...mockCat,
+        imageUrl: "https://images.example.com/cats/cat_123/12345.jpg",
+      };
+      vi.mocked(uploadCatImage).mockReturnValue(okAsync(catWithImage));
+
+      const formData = new FormData();
+      formData.append(
+        "image",
+        new File(["test"], "test.jpg", { type: "image/jpeg" })
+      );
+
+      const res = await request("/cat_123/image", {
+        method: "POST",
+        body: formData,
+      });
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { cat: typeof mockCat };
+      expect(body.cat.imageUrl).toBe(
+        "https://images.example.com/cats/cat_123/12345.jpg"
+      );
+    });
+
+    it("should return 400 for validation error", async () => {
+      vi.mocked(uploadCatImage).mockReturnValue(
+        errAsync(
+          DomainErrors.validation("image", "画像ファイルが必要です")
+        )
+      );
+
+      const res = await request("/cat_123/image", {
+        method: "POST",
+      });
+
+      expect(res.status).toBe(400);
+      const body = (await res.json()) as {
+        error: { type: string; field: string };
+      };
+      expect(body.error.type).toBe("validation");
+      expect(body.error.field).toBe("image");
+    });
+
+    it("should return 404 when cat not found", async () => {
+      vi.mocked(uploadCatImage).mockReturnValue(
+        errAsync(DomainErrors.notFound("cat", "cat_123"))
+      );
+
+      const formData = new FormData();
+      formData.append(
+        "image",
+        new File(["test"], "test.jpg", { type: "image/jpeg" })
+      );
+
+      const res = await request("/cat_123/image", {
+        method: "POST",
+        body: formData,
+      });
+
+      expect(res.status).toBe(404);
+      const body = (await res.json()) as { error: { type: string } };
+      expect(body.error.type).toBe("not_found");
+    });
+
+    it("should return 500 on storage error", async () => {
+      vi.mocked(uploadCatImage).mockReturnValue(
+        errAsync(DomainErrors.database("Upload failed"))
+      );
+
+      const formData = new FormData();
+      formData.append(
+        "image",
+        new File(["test"], "test.jpg", { type: "image/jpeg" })
+      );
+
+      const res = await request("/cat_123/image", {
+        method: "POST",
+        body: formData,
+      });
+
+      expect(res.status).toBe(500);
+      const body = (await res.json()) as { error: { type: string } };
+      expect(body.error.type).toBe("internal");
+    });
+  });
+
+  describe("DELETE /:id/image", () => {
+    it("should delete an image successfully", async () => {
+      const catWithoutImage = { ...mockCat, imageUrl: null };
+      vi.mocked(deleteCatImage).mockReturnValue(okAsync(catWithoutImage));
+
+      const res = await request("/cat_123/image", {
+        method: "DELETE",
+      });
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { cat: typeof mockCat };
+      expect(body.cat.imageUrl).toBeNull();
+    });
+
+    it("should return 404 when cat not found", async () => {
+      vi.mocked(deleteCatImage).mockReturnValue(
+        errAsync(DomainErrors.notFound("cat", "cat_123"))
+      );
+
+      const res = await request("/cat_123/image", {
+        method: "DELETE",
+      });
+
+      expect(res.status).toBe(404);
+      const body = (await res.json()) as { error: { type: string } };
+      expect(body.error.type).toBe("not_found");
+    });
+
+    it("should return 500 on storage error", async () => {
+      vi.mocked(deleteCatImage).mockReturnValue(
+        errAsync(DomainErrors.database("Delete failed"))
+      );
+
+      const res = await request("/cat_123/image", {
+        method: "DELETE",
+      });
+
+      expect(res.status).toBe(500);
+      const body = (await res.json()) as { error: { type: string } };
+      expect(body.error.type).toBe("internal");
     });
   });
 });
