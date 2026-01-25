@@ -92,7 +92,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - DB エラーを DomainError.database に変換
   - _Requirements: WF3-6_
 
-- [ ] 4.2 猫管理ワークフローの実装（RegisterCat, UpdateCat, DeleteCat, ListCats）
+- [x] 4.2 猫管理ワークフローの実装（RegisterCat, UpdateCat, DeleteCat, ListCats）
   - registerCat: 入力検証 → 猫作成（andThen チェーン）
   - updateCat: 猫存在確認 → 入力検証 → 更新
   - deleteCat: 確認フラグチェック → 猫存在確認 → 削除（カスケード削除）
