@@ -33,7 +33,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - fromZodError ヘルパーの実装
   - _Requirements: WF3-11（全ワークフローで使用）_
 
-- [ ] 2.2 共有スキーマと型定義
+- [x] 2.2 共有スキーマと型定義
   - Cat、ToiletLog の Zod スキーマ定義
   - createCatSchema、updateCatSchema の実装
   - createLogSchema、updateLogSchema の実装
