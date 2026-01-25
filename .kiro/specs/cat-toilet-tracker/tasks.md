@@ -68,7 +68,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - ローカル開発用の D1 バインディング設定
   - _Requirements: WF3-11_
 
-- [ ] 3.3 Clerk 認証ミドルウェアの統合
+- [x] 3.3 Clerk 認証ミドルウェアの統合
   - @hono/clerk-auth をインストール
   - 認証ミドルウェアを実装し全 API ルートを保護
   - 認証済みユーザーの userId を取得する仕組みを実装

@@ -7,17 +7,27 @@
 
 import { Hono } from "hono";
 import type { Bindings, Variables } from "./types";
+import { clerkAuth, requireAuth } from "./middleware/auth";
 
 // Create Hono app with typed bindings
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-// Health check endpoint
+// Apply Clerk middleware to all routes
+app.use("*", clerkAuth());
+
+// Health check endpoint (public, no authentication required)
 app.get("/api/health", (c) => {
   return c.json({
     status: "ok",
     service: "nekolog-api",
   });
 });
+
+// Protected API routes require authentication
+// Apply requireAuth middleware to all /api/* routes except /api/health
+app.use("/api/cats/*", requireAuth);
+app.use("/api/logs/*", requireAuth);
+app.use("/api/stats/*", requireAuth);
 
 // Export app type for RPC client
 export type AppType = typeof app;

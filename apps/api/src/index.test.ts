@@ -1,4 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// Mock the @hono/clerk-auth module before importing app
+vi.mock("@hono/clerk-auth", () => ({
+  clerkMiddleware: () => async (_c: unknown, next: () => Promise<void>) => next(),
+  getAuth: vi.fn().mockReturnValue(null),
+}));
+
 import app from "./index";
 
 describe("NekoLog API", () => {
