@@ -8,15 +8,19 @@
     "build": "echo \"api build placeholder\"",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "wrangler d1 migrations apply nekolog-db --local"
   },
   "dependencies": {
     "@nekolog/shared": "workspace:*",
+    "drizzle-orm": "^0.45.1",
     "hono": "^4.11.5"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260118.0",
     "@hono/node-server": "^1.19.9",
+    "drizzle-kit": "^0.31.8",
     "typescript": "^5.7.3",
     "vitest": "^4.0.18",
     "wrangler": "^3.99.0"

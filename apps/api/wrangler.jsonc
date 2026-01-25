@@ -7,16 +7,18 @@
   // Local development settings
   "dev": {
     "port": 8787
-  }
+  },
 
-  // D1 Database binding (will be configured after database creation)
-  // "d1_databases": [
-  //   {
-  //     "binding": "DB",
-  //     "database_name": "nekolog-db",
-  //     "database_id": "<will be set after creation>"
-  //   }
-  // ],
+  // D1 Database binding
+  // For local development, wrangler creates a local SQLite database
+  // For production, set database_id after creating the database
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nekolog-db",
+      "database_id": "local"
+    }
+  ]
 
   // R2 Bucket binding (will be configured after bucket creation)
   // "r2_buckets": [

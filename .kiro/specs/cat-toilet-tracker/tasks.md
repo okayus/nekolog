@@ -60,7 +60,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - Bindings 型の定義（DB, BUCKET, CLERK_*）
   - _Requirements: N/A（インフラ基盤）_
 
-- [ ] 3.2 Drizzle ORM と D1 データベース設定
+- [x] 3.2 Drizzle ORM と D1 データベース設定
   - Drizzle ORM をインストールし設定
   - D1 用のスキーマ定義（users, cats, toilet_logs テーブル）
   - インデックス設定（idx_cats_user_id, idx_toilet_logs_cat_id 等）
