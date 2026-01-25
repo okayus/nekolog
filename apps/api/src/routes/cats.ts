@@ -10,6 +10,7 @@ import type { Bindings, Variables } from "../types";
 import { getUserId } from "../middleware/auth";
 import { handleDomainError } from "../utils/handle-domain-error";
 import { createCatRepository } from "../repositories/cat-repository";
+import { createImageStorageService } from "../services/image-storage";
 import {
   registerCat,
   updateCat,
@@ -17,6 +18,7 @@ import {
   getCat,
   listCats,
 } from "../workflows/cat-workflows";
+import { uploadCatImage, deleteCatImage } from "../workflows/image-workflows";
 
 /**
  * Cat routes factory.
@@ -107,6 +109,59 @@ export const createCatRoutes = () => {
 
     return result.match(
       () => c.json({ success: true }),
+      (error) => handleDomainError(c, error)
+    );
+  });
+
+  /**
+   * POST /api/cats/:id/image
+   * Upload a cat image.
+   * Accepts multipart/form-data with an "image" field.
+   */
+  app.post("/:id/image", async (c) => {
+    const userId = getUserId(c);
+    const catId = c.req.param("id");
+    const catRepo = createCatRepository(c.env.DB);
+    const imageStorage = createImageStorageService(
+      c.env.BUCKET,
+      c.env.PUBLIC_BUCKET_URL
+    );
+
+    // Parse multipart form data
+    const formData = await c.req.formData().catch(() => null);
+    const file = formData?.get("image") as File | null;
+
+    const result = await uploadCatImage(
+      catId,
+      file,
+      userId,
+      catRepo,
+      imageStorage
+    );
+
+    return result.match(
+      (cat) => c.json({ cat }),
+      (error) => handleDomainError(c, error)
+    );
+  });
+
+  /**
+   * DELETE /api/cats/:id/image
+   * Delete a cat's image.
+   */
+  app.delete("/:id/image", async (c) => {
+    const userId = getUserId(c);
+    const catId = c.req.param("id");
+    const catRepo = createCatRepository(c.env.DB);
+    const imageStorage = createImageStorageService(
+      c.env.BUCKET,
+      c.env.PUBLIC_BUCKET_URL
+    );
+
+    const result = await deleteCatImage(catId, userId, catRepo, imageStorage);
+
+    return result.match(
+      (cat) => c.json({ cat }),
       (error) => handleDomainError(c, error)
     );
   });

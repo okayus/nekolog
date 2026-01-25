@@ -109,7 +109,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - DELETE /api/cats/:id?confirmed=true → deleteCat workflow → match
   - _Requirements: WF3-6_
 
-- [ ] 4.4 猫の画像アップロード機能（R2 統合）
+- [x] 4.4 猫の画像アップロード機能（R2 統合）
   - POST /api/cats/:id/image エンドポイント実装
   - R2 バケットへの画像保存処理
   - 画像 URL の cats テーブルへの保存

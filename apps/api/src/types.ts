@@ -17,6 +17,9 @@ export interface Bindings {
   // Cloudflare R2 Bucket for image storage
   BUCKET: R2Bucket;
 
+  // Public URL for R2 bucket (for generating public image URLs)
+  PUBLIC_BUCKET_URL: string;
+
   // Clerk Authentication
   CLERK_SECRET_KEY: string;
   CLERK_PUBLISHABLE_KEY: string;
