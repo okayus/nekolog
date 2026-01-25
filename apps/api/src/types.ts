@@ -4,9 +4,11 @@
  * Type definitions for environment bindings used in the Hono app.
  */
 
+import type { ClerkClient } from "@clerk/backend";
+
 /**
  * Environment bindings for Cloudflare Workers.
- * These are configured in wrangler.toml.
+ * These are configured in wrangler.jsonc.
  */
 export interface Bindings {
   // Cloudflare D1 Database
@@ -24,6 +26,9 @@ export interface Bindings {
  * Variables set during request processing.
  */
 export interface Variables {
-  // User ID from Clerk authentication
+  // User ID from Clerk authentication (set by requireAuth middleware)
   userId?: string;
+
+  // Clerk client instance (set by clerkMiddleware)
+  clerk: ClerkClient;
 }
