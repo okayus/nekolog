@@ -42,7 +42,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - API レスポンス型（CatSummary、ChartData 等）の定義
   - _Requirements: WF3-11_
 
-- [ ] 2.3 共有パッケージのユニットテスト追加
+- [x] 2.3 共有パッケージのユニットテスト追加
   - Vitest をセットアップ
   - Zod スキーマのバリデーションテストを追加
   - DomainErrors コンストラクタのテスト
