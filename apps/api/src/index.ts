@@ -8,6 +8,7 @@
 import { Hono } from "hono";
 import type { Bindings, Variables } from "./types";
 import { clerkAuth, requireAuth } from "./middleware/auth";
+import { createCatRoutes } from "./routes/cats";
 
 // Create Hono app with typed bindings
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -28,6 +29,9 @@ app.get("/api/health", (c) => {
 app.use("/api/cats/*", requireAuth);
 app.use("/api/logs/*", requireAuth);
 app.use("/api/stats/*", requireAuth);
+
+// Mount cat routes
+app.route("/api/cats", createCatRoutes());
 
 // Export app type for RPC client
 export type AppType = typeof app;
