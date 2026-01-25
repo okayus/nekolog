@@ -35,6 +35,9 @@ importers:
       hono:
         specifier: ^4.11.5
         version: 4.11.5
+      neverthrow:
+        specifier: ^8.2.0
+        version: 8.2.0
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20260118.0
