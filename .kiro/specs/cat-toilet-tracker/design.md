@@ -14,6 +14,7 @@
 - 複数の猫を管理可能
 - 招待制認証による安全なアクセス制御
 - Hono RPC による型安全なスキーマ駆動 API
+- **neverthrow による Railway Oriented Programming で型安全なエラーハンドリング**
 - pnpm + Turborepo によるモノレポ構成
 - GitHub Actions による自動 CI/CD
 
@@ -41,9 +42,16 @@ graph TB
     subgraph CloudflareWorkers[Cloudflare Workers]
         HonoAPI[Hono API Server]
         ClerkMiddleware[Clerk Auth Middleware]
-        CatsRoute[Cats Routes]
-        LogsRoute[Toilet Logs Routes]
-        StatsRoute[Stats Routes]
+        subgraph Workflows[Domain Workflows]
+            CatWorkflows[Cat Workflows]
+            LogWorkflows[Toilet Log Workflows]
+            StatsWorkflows[Stats Workflows]
+        end
+        subgraph Routes[API Routes]
+            CatsRoute[Cats Routes]
+            LogsRoute[Toilet Logs Routes]
+            StatsRoute[Stats Routes]
+        end
     end
 
     subgraph CloudflareStorage[Cloudflare Storage]
@@ -63,16 +71,19 @@ graph TB
     HonoAPI --> CatsRoute
     HonoAPI --> LogsRoute
     HonoAPI --> StatsRoute
-    CatsRoute --> D1
-    LogsRoute --> D1
-    StatsRoute --> D1
-    CatsRoute --> R2
+    CatsRoute --> CatWorkflows
+    LogsRoute --> LogWorkflows
+    StatsRoute --> StatsWorkflows
+    CatWorkflows --> D1
+    LogWorkflows --> D1
+    StatsWorkflows --> D1
+    CatWorkflows --> R2
 ```
 
 **Architecture Integration**:
-- **Selected Pattern**: レイヤードモノリス（単一 Workers 内で機能別ルート分割）
-- **Domain Boundaries**: 認証・猫管理・トイレ記録・統計の4ドメイン
-- **New Components Rationale**: グリーンフィールド開発のため全コンポーネントが新規
+- **Selected Pattern**: レイヤードモノリス（単一 Workers 内で機能別ルート分割）+ ワークフロー駆動
+- **Domain Boundaries**: 認証・猫管理・トイレ記録・統計の4ドメイン（requirements.md の Bounded Contexts に対応）
+- **Error Handling**: neverthrow による Railway Oriented Programming
 - **Steering Compliance**: Cloudflare サーバーレス、TypeScript ファースト、スキーマ駆動
 
 ### Technology Stack
@@ -88,6 +99,7 @@ graph TB
 | Charts | Recharts | 統計グラフ表示 | 軽量チャートライブラリ |
 | Backend | Hono v4 + TypeScript | API サーバー | Workers 最適化 |
 | Validation | Zod | スキーマ検証 | RPC 型生成に使用 |
+| Error Handling | neverthrow | Railway Oriented Programming | Result 型でエラーを型安全に表現 |
 | ORM | Drizzle ORM | DB クエリ | D1 ネイティブ対応 |
 | Database | Cloudflare D1 | データ永続化 | SQLite 互換 |
 | Object Storage | Cloudflare R2 | 画像保存 | 猫の写真用 |
@@ -112,6 +124,11 @@ nekolog/
 │   │   └── tsconfig.json
 │   └── api/                    # Hono API (Cloudflare Workers)
 │       ├── src/
+│       │   ├── index.ts        # エントリーポイント
+│       │   ├── routes/         # API ルート
+│       │   ├── workflows/      # ドメインワークフロー
+│       │   ├── repositories/   # データアクセス層
+│       │   └── middleware/     # ミドルウェア
 │       ├── package.json
 │       ├── wrangler.toml
 │       └── tsconfig.json
@@ -119,7 +136,8 @@ nekolog/
 │   └── shared/                 # 共有型・スキーマ
 │       ├── src/
 │       │   ├── types.ts        # 共通型定義
-│       │   └── schemas.ts      # Zod スキーマ
+│       │   ├── schemas.ts      # Zod スキーマ
+│       │   └── errors.ts       # ドメインエラー定義
 │       ├── package.json
 │       └── tsconfig.json
 ├── package.json                # ルート package.json
@@ -128,188 +146,142 @@ nekolog/
 └── tsconfig.base.json          # 共通 TypeScript 設定
 ```
 
-### Workspace Configuration
+## Railway Oriented Programming with neverthrow
 
-```yaml
-# pnpm-workspace.yaml
-packages:
-  - "apps/*"
-  - "packages/*"
-```
+### Error Handling Philosophy
 
-```json
-// turbo.json
-{
-  "$schema": "https://turbo.build/schema.json",
-  "tasks": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**"]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "lint": {
-      "dependsOn": ["^build"]
-    },
-    "test": {
-      "dependsOn": ["^build"]
-    },
-    "typecheck": {
-      "dependsOn": ["^build"]
-    },
-    "deploy": {
-      "dependsOn": ["build", "test", "typecheck"]
-    }
-  }
-}
-```
-
-### Package Dependencies
-
-```json
-// apps/web/package.json (抜粋)
-{
-  "name": "@nekolog/web",
-  "dependencies": {
-    "@nekolog/shared": "workspace:*"
-  }
-}
-
-// apps/api/package.json (抜粋)
-{
-  "name": "@nekolog/api",
-  "dependencies": {
-    "@nekolog/shared": "workspace:*"
-  }
-}
-```
-
-## CI/CD Pipeline
-
-### GitHub Actions Workflow
+Domain Modeling Made Functional のアプローチに基づき、エラーを例外ではなく型で表現します。
 
 ```mermaid
 graph LR
-    subgraph PR
-        A[Push/PR] --> B[Install deps]
-        B --> C[Typecheck]
-        B --> D[Lint]
-        B --> E[Test]
-        C & D & E --> F[Build]
-        F --> G[Preview Deploy]
+    subgraph HappyPath[Happy Path]
+        Input --> Validate
+        Validate --> Process
+        Process --> Output
     end
 
-    subgraph Main
-        H[Merge to main] --> I[Install deps]
-        I --> J[Build]
-        J --> K[Deploy API]
-        J --> L[Deploy Web]
-        K & L --> M[Notify]
+    subgraph ErrorPath[Error Path]
+        Validate -.->|ValidationError| ErrorOutput
+        Process -.->|NotFoundError| ErrorOutput
+        Process -.->|DatabaseError| ErrorOutput
     end
+
+    ErrorOutput[Error Response]
+    Output[Success Response]
 ```
 
-### CI Workflow (ci.yml)
+### Domain Error Types
 
-```yaml
-name: CI
+```typescript
+// packages/shared/src/errors.ts
+import { err, ok, Result, ResultAsync } from 'neverthrow';
 
-on:
-  pull_request:
-    branches: [main]
+// Discriminated union for domain errors
+export type DomainError =
+  | { type: 'validation'; field: string; message: string }
+  | { type: 'not_found'; resource: string; id: string }
+  | { type: 'unauthorized'; message: string }
+  | { type: 'confirmation_required' }
+  | { type: 'database'; message: string };
 
-jobs:
-  ci:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+// Type-safe error constructors
+export const DomainErrors = {
+  validation: (field: string, message: string): DomainError =>
+    ({ type: 'validation', field, message }),
+  notFound: (resource: string, id: string): DomainError =>
+    ({ type: 'not_found', resource, id }),
+  unauthorized: (message: string): DomainError =>
+    ({ type: 'unauthorized', message }),
+  confirmationRequired: (): DomainError =>
+    ({ type: 'confirmation_required' }),
+  database: (message: string): DomainError =>
+    ({ type: 'database', message }),
+};
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "pnpm"
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm turbo typecheck lint test
-
-      - run: pnpm turbo build
-
-      # Preview deploy for PR
-      - name: Deploy API Preview
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/api
-          command: deploy --env preview
-
-      - name: Deploy Web Preview
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/web
-          command: pages deploy dist --project-name=nekolog-preview
+// Helper to convert Zod errors to DomainError
+export const fromZodError = (error: z.ZodError): DomainError => ({
+  type: 'validation',
+  field: error.errors[0]?.path.join('.') ?? 'unknown',
+  message: error.errors[0]?.message ?? 'Validation failed',
+});
 ```
 
-### Deploy Workflow (deploy.yml)
+### Workflow Pattern
 
-```yaml
-name: Deploy
+各ワークフローは `ResultAsync<T, DomainError>` を返し、`andThen()` でチェーンします。
 
-on:
-  push:
-    branches: [main]
+```typescript
+// apps/api/src/workflows/cat-workflows.ts
+import { ResultAsync, okAsync, errAsync } from 'neverthrow';
+import { DomainError, DomainErrors, fromZodError } from '@nekolog/shared';
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+// Workflow: RegisterCat
+export const registerCat = (
+  input: unknown,
+  userId: string,
+  deps: { catRepo: CatRepository; r2: R2Bucket }
+): ResultAsync<Cat, DomainError> => {
+  // 1. Validate input
+  return validateCatInput(input)
+    // 2. Check name uniqueness (optional business rule)
+    .andThen((validated) => checkNameUniqueness(validated, userId, deps.catRepo))
+    // 3. Upload photo if provided
+    .andThen((validated) => uploadPhotoIfProvided(validated, deps.r2))
+    // 4. Create cat in database
+    .andThen((catData) => deps.catRepo.create(catData, userId));
+};
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "pnpm"
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm turbo build
-
-      - name: Deploy API
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/api
-          command: deploy
-
-      - name: Deploy Web
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/web
-          command: pages deploy dist --project-name=nekolog
+// Each step returns ResultAsync<T, DomainError>
+const validateCatInput = (input: unknown): ResultAsync<CreateCatInput, DomainError> => {
+  const result = createCatSchema.safeParse(input);
+  if (!result.success) {
+    return errAsync(fromZodError(result.error));
+  }
+  return okAsync(result.data);
+};
 ```
 
-### Required Secrets
+### API Route Integration
 
-| Secret | Description |
-|--------|-------------|
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API トークン（Workers/Pages 編集権限） |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID |
-| `CLERK_SECRET_KEY` | Clerk シークレットキー（本番用） |
+ルートハンドラで `match()` を使って HTTP レスポンスに変換します。
+
+```typescript
+// apps/api/src/routes/cats.ts
+import { Hono } from 'hono';
+import { registerCat } from '../workflows/cat-workflows';
+
+const catsRoutes = new Hono<{ Bindings: Bindings }>()
+  .post('/', async (c) => {
+    const userId = c.get('userId');
+    const body = await c.req.json();
+
+    const result = await registerCat(body, userId, {
+      catRepo: createCatRepository(c.env.DB),
+      r2: c.env.BUCKET,
+    });
+
+    return result.match(
+      (cat) => c.json(cat, 201),
+      (error) => handleDomainError(c, error)
+    );
+  });
+
+// Error to HTTP response mapping
+const handleDomainError = (c: Context, error: DomainError): Response => {
+  switch (error.type) {
+    case 'validation':
+      return c.json({ error }, 400);
+    case 'not_found':
+      return c.json({ error }, 404);
+    case 'unauthorized':
+      return c.json({ error }, 401);
+    case 'confirmation_required':
+      return c.json({ error }, 422);
+    case 'database':
+      return c.json({ error: { type: 'internal', message: 'Server error' } }, 500);
+  }
+};
+```
 
 ## System Flows
 
@@ -338,130 +310,137 @@ sequenceDiagram
     API-->>SPA: レスポンス
 ```
 
-### トイレ記録登録フロー
+### トイレ記録登録フロー（Railway Oriented）
 
 ```mermaid
 sequenceDiagram
     participant User
     participant SPA
     participant API
+    participant Workflow
     participant D1
 
     User->>SPA: 記録追加ボタンクリック
     SPA->>SPA: 記録フォーム表示
     User->>SPA: 猫選択 + 種類選択 + 送信
     SPA->>API: POST /api/logs
-    API->>D1: INSERT toilet_logs
-    D1-->>API: 成功
-    API-->>SPA: 201 Created
+    API->>Workflow: addToiletLog(input)
+
+    Note over Workflow: Railway starts
+    Workflow->>Workflow: validateInput() → Ok/Err
+    alt Validation Failed
+        Workflow-->>API: Err(ValidationError)
+        API-->>SPA: 400 Bad Request
+    else Validation OK
+        Workflow->>D1: findCat(catId)
+        alt Cat Not Found
+            D1-->>Workflow: None
+            Workflow-->>API: Err(NotFoundError)
+            API-->>SPA: 404 Not Found
+        else Cat Found
+            Workflow->>D1: INSERT toilet_logs
+            D1-->>Workflow: Ok(ToiletLog)
+            Workflow-->>API: Ok(ToiletLog)
+            API-->>SPA: 201 Created
+        end
+    end
+
     SPA->>SPA: キャッシュ無効化
-    SPA->>User: 成功メッセージ表示
+    SPA->>User: 成功/エラーメッセージ表示
 ```
 
 ## Requirements Traceability
 
-| Requirement | Summary | Components | Interfaces | Flows |
-|-------------|---------|------------|------------|-------|
-| 1.1 | ログインページ表示 | LoginPage, ClerkProvider | - | 認証フロー |
-| 1.2 | 認証とリダイレクト | AuthMiddleware, ClerkMiddleware | - | 認証フロー |
-| 1.3 | 無効認証エラー | LoginPage | - | 認証フロー |
-| 1.4 | 未認証リダイレクト | ProtectedRoute | - | 認証フロー |
-| 1.5 | ログアウト | Header, ClerkProvider | - | - |
-| 1.6 | ユーザー作成なし | - | - | Clerk Dashboard で管理 |
-| 2.1 | 猫登録 | CatForm, CatsAPI | CatsService | - |
-| 2.2 | 名前必須 | CatForm, catsSchema | CatsService | - |
-| 2.3 | 追加情報登録 | CatForm, CatImageUpload | CatsService, R2 | - |
-| 2.4 | 猫一覧表示 | CatList | CatsService | - |
-| 2.5 | 猫情報編集 | CatEditForm | CatsService | - |
-| 2.6 | 猫削除 | CatDeleteDialog | CatsService | カスケード削除 |
-| 3.1 | トイレ記録追加 | LogForm | LogsService | 記録登録フロー |
-| 3.2 | 種類記録 | LogForm, logsSchema | LogsService | - |
-| 3.3 | 日時設定 | LogForm | LogsService | - |
-| 3.4 | メモ記録 | LogForm | LogsService | - |
-| 3.5 | 成功メッセージ | Toast | - | - |
-| 3.6 | 記録編集 | LogEditForm | LogsService | - |
-| 3.7 | 記録削除 | LogDeleteDialog | LogsService | - |
-| 4.1 | 本日サマリー | DashboardSummary | StatsService | - |
-| 4.2 | 期間別表示 | StatsChart | StatsService | - |
-| 4.3 | 種類別表示 | StatsChart | StatsService | - |
-| 4.4 | 期間選択 | PeriodSelector | StatsService | - |
-| 4.5 | 猫別詳細 | CatStats | StatsService | - |
-| 4.6 | グラフ表示 | StatsChart | - | Recharts |
-| 5.1 | 履歴一覧 | HistoryList | LogsService | - |
-| 5.2-5.4 | フィルタリング | HistoryFilters | LogsService | - |
-| 5.5 | ページネーション | Pagination | LogsService | - |
-| 6.1-6.2 | レスポンシブ | 全UIコンポーネント | - | Tailwind |
-| 6.3 | 素早い記録UI | QuickLogButton | LogsService | - |
-| 6.4 | オフライン通知 | OfflineIndicator | - | - |
+| Workflow | Summary | Components | Interfaces | Flows |
+|----------|---------|------------|------------|-------|
+| WF1 AuthenticateUser | ログイン | LoginPage, ClerkProvider, ClerkMiddleware | - | 認証フロー |
+| WF2 TerminateSession | ログアウト | Header, ClerkProvider | - | - |
+| WF3 RegisterCat | 猫登録 | CatForm, registerCat workflow | CatsAPI | - |
+| WF4 UpdateCat | 猫更新 | CatEditForm, updateCat workflow | CatsAPI | - |
+| WF5 DeleteCat | 猫削除 | CatDeleteDialog, deleteCat workflow | CatsAPI | カスケード削除 |
+| WF6 ListCats | 猫一覧 | CatList, listCats workflow | CatsAPI | - |
+| WF7 AddToiletLog | 記録追加 | LogForm, addToiletLog workflow | LogsAPI | 記録登録フロー |
+| WF8 UpdateToiletLog | 記録更新 | LogEditForm, updateToiletLog workflow | LogsAPI | - |
+| WF9 DeleteToiletLog | 記録削除 | LogDeleteDialog, deleteToiletLog workflow | LogsAPI | - |
+| WF10 GetToiletHistory | 履歴取得 | HistoryList, getHistory workflow | LogsAPI | - |
+| WF11 GetDashboardStats | 統計取得 | DashboardPage, getStats workflow | StatsAPI | - |
 
 ## Components and Interfaces
 
 ### Summary
 
-| Component | Domain/Layer | Intent | Req Coverage | Key Dependencies | Contracts |
-|-----------|--------------|--------|--------------|------------------|-----------|
+| Component | Domain/Layer | Intent | Workflow Coverage | Key Dependencies | Contracts |
+|-----------|--------------|--------|------------------|------------------|-----------|
 | HonoApp | Backend/Core | API エントリーポイント | All | Hono, ClerkMiddleware (P0) | API |
-| CatsRoutes | Backend/Routes | 猫管理 API | 2.1-2.6 | DrizzleORM, R2 (P0) | API |
-| LogsRoutes | Backend/Routes | トイレ記録 API | 3.1-3.7, 5.1-5.5 | DrizzleORM (P0) | API |
-| StatsRoutes | Backend/Routes | 統計 API | 4.1-4.6 | DrizzleORM (P0) | API |
-| ClerkMiddleware | Backend/Auth | 認証検証 | 1.1-1.5 | @hono/clerk-auth (P0) | Service |
+| CatWorkflows | Backend/Workflow | 猫管理ワークフロー | WF3-6 | CatRepository, R2 (P0) | Service |
+| LogWorkflows | Backend/Workflow | トイレ記録ワークフロー | WF7-10 | LogRepository (P0) | Service |
+| StatsWorkflows | Backend/Workflow | 統計ワークフロー | WF11 | LogRepository (P0) | Service |
+| CatsRoutes | Backend/Routes | 猫管理 API | WF3-6 | CatWorkflows (P0) | API |
+| LogsRoutes | Backend/Routes | トイレ記録 API | WF7-10 | LogWorkflows (P0) | API |
+| StatsRoutes | Backend/Routes | 統計 API | WF11 | StatsWorkflows (P0) | API |
 | App | Frontend/Core | SPA エントリーポイント | All | React, TanStack Query (P0) | - |
-| DashboardPage | Frontend/Page | ダッシュボード | 4.1-4.6 | StatsService (P0) | - |
-| CatsPage | Frontend/Page | 猫管理ページ | 2.1-2.6 | CatsService (P0) | - |
-| HistoryPage | Frontend/Page | 履歴ページ | 5.1-5.5 | LogsService (P0) | - |
-| LogForm | Frontend/Component | 記録登録フォーム | 3.1-3.4 | hc client (P0) | - |
+| DashboardPage | Frontend/Page | ダッシュボード | WF11 | StatsAPI (P0) | - |
+| LogForm | Frontend/Component | 記録登録フォーム | WF7 | hc client (P0) | - |
 
-### Backend / API Layer
+### Backend / Workflow Layer
 
-#### HonoApp
+#### CatWorkflows
 
 | Field | Detail |
 |-------|--------|
-| Intent | API サーバーのエントリーポイント、ルーティング統合 |
-| Requirements | All |
+| Intent | 猫管理に関するドメインワークフローを提供 |
+| Workflows | WF3 RegisterCat, WF4 UpdateCat, WF5 DeleteCat, WF6 ListCats |
 
-**Responsibilities & Constraints**
-- すべての API ルートを統合
-- CORS 設定
-- エラーハンドリングの統一
+**Contracts**: Service [x]
 
-**Dependencies**
-- Inbound: Cloudflare Workers runtime — リクエスト受付 (P0)
-- Outbound: CatsRoutes, LogsRoutes, StatsRoutes — 機能別ルート (P0)
-- External: Clerk — 認証検証 (P0)
-
-**Contracts**: API [x]
-
-##### API Contract
+##### Service Interface
 
 ```typescript
-// エントリーポイント型定義
-import { Hono } from 'hono';
+import { ResultAsync } from 'neverthrow';
+import { DomainError } from '@nekolog/shared';
 
-type Bindings = {
-  DB: D1Database;
-  BUCKET: R2Bucket;
-  CLERK_SECRET_KEY: string;
-  CLERK_PUBLISHABLE_KEY: string;
-};
-
-const app = new Hono<{ Bindings: Bindings }>();
-
-// ルート統合
-app.route('/api/cats', catsRoutes);
-app.route('/api/logs', logsRoutes);
-app.route('/api/stats', statsRoutes);
-
-export type AppType = typeof app;
-export default app;
+interface CatWorkflows {
+  registerCat(input: unknown, userId: string): ResultAsync<Cat, DomainError>;
+  updateCat(catId: string, input: unknown, userId: string): ResultAsync<Cat, DomainError>;
+  deleteCat(catId: string, confirmed: boolean, userId: string): ResultAsync<void, DomainError>;
+  listCats(userId: string): ResultAsync<Cat[], DomainError>;
+  getCat(catId: string, userId: string): ResultAsync<Cat, DomainError>;
+}
 ```
+
+**Implementation Notes**
+- 各ワークフローは `ResultAsync<T, DomainError>` を返す
+- `andThen()` でステップをチェーン、失敗時は自動短絡評価
+- 削除時は確認フラグがなければ `ConfirmationRequired` エラー
+
+#### LogWorkflows
+
+| Field | Detail |
+|-------|--------|
+| Intent | トイレ記録に関するドメインワークフローを提供 |
+| Workflows | WF7 AddToiletLog, WF8 UpdateToiletLog, WF9 DeleteToiletLog, WF10 GetToiletHistory |
+
+**Contracts**: Service [x]
+
+##### Service Interface
+
+```typescript
+interface LogWorkflows {
+  addLog(input: unknown, userId: string): ResultAsync<ToiletLog, DomainError>;
+  updateLog(logId: string, input: unknown, userId: string): ResultAsync<ToiletLog, DomainError>;
+  deleteLog(logId: string, confirmed: boolean, userId: string): ResultAsync<void, DomainError>;
+  getHistory(filters: HistoryFilters, pagination: Pagination, userId: string): ResultAsync<PaginatedLogs, DomainError>;
+}
+```
+
+### Backend / Routes Layer
 
 #### CatsRoutes
 
 | Field | Detail |
 |-------|--------|
 | Intent | 猫の CRUD 操作を提供する API ルート |
-| Requirements | 2.1, 2.2, 2.3, 2.4, 2.5, 2.6 |
+| Workflows | WF3-6 |
 
 **Contracts**: API [x]
 
@@ -473,51 +452,33 @@ export default app;
 | GET | /api/cats/:id | - | Cat | 401, 404 |
 | POST | /api/cats | CreateCatInput | Cat | 400, 401 |
 | PUT | /api/cats/:id | UpdateCatInput | Cat | 400, 401, 404 |
-| DELETE | /api/cats/:id | - | { success: true } | 401, 404 |
+| DELETE | /api/cats/:id | ?confirmed=true | { success: true } | 401, 404, 422 |
 | POST | /api/cats/:id/image | FormData (file) | { imageUrl: string } | 400, 401, 404 |
 
-##### Service Interface
+##### Zod Schemas
 
 ```typescript
-// Zod スキーマ定義
 import { z } from 'zod';
 
 export const createCatSchema = z.object({
-  name: z.string().min(1).max(50),
+  name: z.string().min(1, '名前は必須です').max(50),
   birthDate: z.string().datetime().optional(),
   breed: z.string().max(50).optional(),
-  weight: z.number().positive().optional(),
+  weight: z.number().positive('体重は正の数で入力してください').optional(),
 });
 
 export const updateCatSchema = createCatSchema.partial();
 
 export type CreateCatInput = z.infer<typeof createCatSchema>;
 export type UpdateCatInput = z.infer<typeof updateCatSchema>;
-
-export interface Cat {
-  id: string;
-  userId: string;
-  name: string;
-  birthDate: string | null;
-  breed: string | null;
-  weight: number | null;
-  imageUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
 ```
-
-**Implementation Notes**
-- 画像アップロードは multipart/form-data で受け取り R2 に保存
-- 猫削除時は関連する toilet_logs も CASCADE 削除
-- userId は Clerk ミドルウェアから取得
 
 #### LogsRoutes
 
 | Field | Detail |
 |-------|--------|
 | Intent | トイレ記録の CRUD 操作と履歴取得を提供 |
-| Requirements | 3.1-3.7, 5.1-5.5 |
+| Workflows | WF7-10 |
 
 **Contracts**: API [x]
 
@@ -529,9 +490,9 @@ export interface Cat {
 | GET | /api/logs/:id | - | ToiletLog | 401, 404 |
 | POST | /api/logs | CreateLogInput | ToiletLog | 400, 401 |
 | PUT | /api/logs/:id | UpdateLogInput | ToiletLog | 400, 401, 404 |
-| DELETE | /api/logs/:id | - | { success: true } | 401, 404 |
+| DELETE | /api/logs/:id | ?confirmed=true | { success: true } | 401, 404, 422 |
 
-##### Service Interface
+##### Zod Schemas
 
 ```typescript
 import { z } from 'zod';
@@ -541,7 +502,7 @@ export const toiletTypeSchema = z.enum(['urine', 'feces']);
 export const createLogSchema = z.object({
   catId: z.string().uuid(),
   type: toiletTypeSchema,
-  timestamp: z.string().datetime(),
+  timestamp: z.string().datetime().optional(), // default: now
   note: z.string().max(500).optional(),
 });
 
@@ -558,26 +519,6 @@ export const logsQuerySchema = z.object({
 
 export type ToiletType = z.infer<typeof toiletTypeSchema>;
 export type CreateLogInput = z.infer<typeof createLogSchema>;
-export type UpdateLogInput = z.infer<typeof updateLogSchema>;
-
-export interface ToiletLog {
-  id: string;
-  catId: string;
-  catName: string;
-  type: ToiletType;
-  timestamp: string;
-  note: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PaginatedLogs {
-  data: ToiletLog[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
 ```
 
 #### StatsRoutes
@@ -585,7 +526,7 @@ export interface PaginatedLogs {
 | Field | Detail |
 |-------|--------|
 | Intent | ダッシュボード用統計データを集計して提供 |
-| Requirements | 4.1-4.6 |
+| Workflows | WF11 |
 
 **Contracts**: API [x]
 
@@ -596,20 +537,9 @@ export interface PaginatedLogs {
 | GET | /api/stats/summary | - | DailySummary | 401 |
 | GET | /api/stats/chart | ?catId, ?period, ?from, ?to | ChartData | 401 |
 
-##### Service Interface
+##### Response Types
 
 ```typescript
-import { z } from 'zod';
-
-export const periodSchema = z.enum(['daily', 'weekly', 'monthly']);
-
-export const statsQuerySchema = z.object({
-  catId: z.string().uuid().optional(),
-  period: periodSchema.default('daily'),
-  from: z.string().datetime().optional(),
-  to: z.string().datetime().optional(),
-});
-
 export interface CatSummary {
   catId: string;
   catName: string;
@@ -640,34 +570,6 @@ export interface ChartData {
   data: ChartDataPoint[];
 }
 ```
-
-### Frontend / Pages Layer
-
-#### DashboardPage
-
-| Field | Detail |
-|-------|--------|
-| Intent | 本日のサマリーと統計グラフを表示するメインページ |
-| Requirements | 4.1-4.6 |
-
-**Implementation Notes**
-- TanStack Query で `/api/stats/summary` と `/api/stats/chart` を並列取得
-- 期間セレクターで daily/weekly/monthly を切り替え
-- Recharts で折れ線グラフ表示
-
-#### LogForm
-
-| Field | Detail |
-|-------|--------|
-| Intent | トイレ記録を素早く登録するためのフォーム |
-| Requirements | 3.1-3.5 |
-
-**Implementation Notes**
-- 猫選択はドロップダウン（事前に猫一覧を取得）
-- 種類は urine/feces のトグルボタン
-- 日時は現在時刻をデフォルト、DateTimePicker で変更可能
-- 送信後は楽観的更新でキャッシュ反映
-- vercel-react-best-practices の `rerender-functional-setstate` に従い安定したコールバックを使用
 
 ## Data Models
 
@@ -711,50 +613,10 @@ erDiagram
 **Business Rules & Invariants**:
 - User は Clerk で認証された userId を持つ
 - Cat は必ず User に属する
+- Cat.name は空文字不可（NonEmptyString）
 - ToiletLog は必ず Cat に属する
+- ToiletLog.type は 'urine' | 'feces' のいずれか
 - Cat 削除時は関連する ToiletLog も削除
-
-### Physical Data Model (D1/SQLite)
-
-```sql
--- Users table (Clerk ユーザー情報のローカルキャッシュ)
-CREATE TABLE users (
-  id TEXT PRIMARY KEY,
-  clerk_id TEXT UNIQUE NOT NULL,
-  email TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
--- Cats table
-CREATE TABLE cats (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  birth_date TEXT,
-  breed TEXT,
-  weight REAL,
-  image_url TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX idx_cats_user_id ON cats(user_id);
-
--- Toilet logs table
-CREATE TABLE toilet_logs (
-  id TEXT PRIMARY KEY,
-  cat_id TEXT NOT NULL REFERENCES cats(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('urine', 'feces')),
-  timestamp TEXT NOT NULL,
-  note TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX idx_toilet_logs_cat_id ON toilet_logs(cat_id);
-CREATE INDEX idx_toilet_logs_timestamp ON toilet_logs(timestamp);
-CREATE INDEX idx_toilet_logs_cat_timestamp ON toilet_logs(cat_id, timestamp);
-```
 
 ### Drizzle Schema
 
@@ -803,34 +665,37 @@ export const toiletLogs = sqliteTable('toilet_logs', {
 ### Error Categories and Responses
 
 **User Errors (4xx)**:
-- 400 Bad Request — Zod バリデーションエラー、フィールドごとのエラーメッセージを返却
-- 401 Unauthorized — Clerk トークン無効、ログインページへリダイレクト案内
-- 404 Not Found — リソース不存在、該当リソースの案内
+- 400 Bad Request — Zod バリデーションエラー、`DomainError.validation`
+- 401 Unauthorized — Clerk トークン無効、`DomainError.unauthorized`
+- 404 Not Found — リソース不存在、`DomainError.not_found`
+- 422 Unprocessable Entity — 確認必要、`DomainError.confirmation_required`
 
 **System Errors (5xx)**:
-- 500 Internal Server Error — D1/R2 エラー、汎用エラーメッセージ
-- 503 Service Unavailable — 外部サービス（Clerk）障害
+- 500 Internal Server Error — `DomainError.database`（詳細はログのみ）
 
 ### Error Response Format
 
 ```typescript
-interface ApiError {
-  error: {
-    code: string;
-    message: string;
-    details?: Record<string, string[]>; // バリデーションエラー用
-  };
+// API エラーレスポンス（Result の Err から生成）
+interface ApiErrorResponse {
+  error: DomainError;
 }
 
 // 例: バリデーションエラー
 {
   "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "入力内容に誤りがあります",
-    "details": {
-      "name": ["名前は必須です"],
-      "weight": ["体重は正の数で入力してください"]
-    }
+    "type": "validation",
+    "field": "name",
+    "message": "名前は必須です"
+  }
+}
+
+// 例: Not Found
+{
+  "error": {
+    "type": "not_found",
+    "resource": "cat",
+    "id": "abc-123"
   }
 }
 ```
@@ -839,12 +704,13 @@ interface ApiError {
 
 ### Unit Tests
 - Zod スキーマのバリデーションロジック
+- ワークフローの個別ステップ（純粋関数として）
 - 統計集計関数（日別・週別・月別の計算）
-- 日付フォーマット・パース関数
-- Drizzle クエリビルダー
+- DomainError コンストラクタ
 - **実行**: `pnpm turbo test --filter=@nekolog/shared`
 
 ### Integration Tests
+- ワークフロー全体の Result チェーン動作
 - 認証フロー（Clerk ミドルウェア動作確認）
 - CRUD 操作の DB 反映
 - R2 画像アップロード・取得
@@ -858,10 +724,6 @@ interface ApiError {
 - 履歴フィルタリング・ページネーション
 - **ツール**: Playwright
 - **実行**: `pnpm turbo test:e2e --filter=@nekolog/web`
-
-### CI Pipeline での実行
-- PR 時: `pnpm turbo typecheck lint test` で全テスト実行
-- Turborepo のキャッシュにより、変更のあったパッケージのみ再テスト
 
 ## Security Considerations
 
@@ -886,4 +748,4 @@ interface ApiError {
 - TanStack Query によるキャッシュ活用（staleTime: 30秒）
 - 統計クエリのインデックス最適化
 - 画像の遅延読み込み
-- vercel-react-best-practices の `bundle-dynamic-imports` に従い Recharts を動的インポート
+- Recharts を動的インポート（bundle-dynamic-imports）

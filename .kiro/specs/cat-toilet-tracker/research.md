@@ -9,8 +9,28 @@
   - Drizzle ORM は D1 との相性が良く、TypeScript ファーストの設計
   - Turborepo + pnpm workspaces でモノレポ構成、共有パッケージで型を共有
   - GitHub Actions + wrangler-action で CI/CD を自動化
+  - **neverthrow** による Railway Oriented Programming で型安全なエラーハンドリングを実現
 
 ## Research Log
+
+### neverthrow による Railway Oriented Programming
+- **Context**: Domain Modeling Made Functional に基づく型安全なエラーハンドリング
+- **Sources Consulted**:
+  - [neverthrow GitHub](https://github.com/supermacro/neverthrow)
+  - [NeverThrow and Railway Oriented Programming in TypeScript](https://blog.eneascaccabarozzi.xyz/neverthrow-and-railway-oriented-programming-in-typescript/)
+  - [jambit - Try but don't catch](https://www.jambit.com/en/latest-info/toilet-papers/try-but-dont-catch-elegant-error-handling-with-typescript/)
+- **Findings**:
+  - `Result<T, E>` 型で成功（`Ok`）と失敗（`Err`）を表現
+  - `andThen()` でワークフローをチェーン、失敗時は自動的に短絡評価
+  - `ResultAsync<T, E>` で非同期ワークフローも同様に合成可能
+  - `Result.fromThrowable()` で既存の throw ベースのコードをラップ可能
+  - `eslint-plugin-neverthrow` で Result の未処理を防止
+  - Zod バリデーションと組み合わせて入力検証を Result に変換可能
+- **Implications**:
+  - サービス層は `Result<T, DomainError>` を返す
+  - API ルートで `match()` を使って HTTP レスポンスに変換
+  - ドメインエラーは discriminated union で定義
+  - try-catch を使わず、型で失敗を表現
 
 ### Cloudflare Workers + Hono + D1 統合
 - **Context**: サーバーレスバックエンドの技術スタック選定
@@ -129,6 +149,22 @@
 
 ## Design Decisions
 
+### Decision: エラーハンドリング戦略
+- **Context**: Domain Modeling Made Functional に基づくワークフロー実装
+- **Alternatives Considered**:
+  1. try-catch + カスタムエラークラス
+  2. fp-ts の Either 型
+  3. neverthrow の Result 型
+- **Selected Approach**: neverthrow の Result 型
+- **Rationale**:
+  - 軽量（依存ゼロ）で学習コストが低い
+  - TypeScript との相性が良く、型推論が効く
+  - `andThen()` によるワークフロー合成が直感的
+  - `ResultAsync` で非同期処理も同様に扱える
+  - eslint プラグインで未処理 Result を検出可能
+- **Trade-offs**: fp-ts ほどの抽象化は提供しないが、シンプルさを優先
+- **Follow-up**: ESLint プラグインの設定
+
 ### Decision: データベース設計
 - **Context**: 猫とトイレ記録のデータ構造
 - **Alternatives Considered**:
@@ -217,6 +253,7 @@
 - **R2 のファイルサイズ** — Workers API は 100MB 制限。画像は十分対応可能
 - **モノレポの複雑さ** — Turborepo の学習コストあり。公式テンプレートをベースに構築
 - **CI キャッシュの問題** — pnpm + モノレポでキャッシュが効かない報告あり。適切なキャッシュキー設定で対応
+- **neverthrow 学習コスト** — シンプルなAPIなので低い。eslint プラグインで強制的に習慣化
 
 ## References
 - [Hono 公式ドキュメント](https://hono.dev/) — フレームワーク全般
@@ -229,3 +266,5 @@
 - [pnpm Workspaces](https://pnpm.io/workspaces) — ワークスペース管理
 - [Cloudflare GitHub Actions](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/) — CI/CD
 - [wrangler-action](https://github.com/cloudflare/wrangler-action) — デプロイアクション
+- [neverthrow](https://github.com/supermacro/neverthrow) — Railway Oriented Programming
+- [Scott Wlaschin - Railway Oriented Programming](https://fsharpforfunandprofit.com/rop/) — ROP 概念
