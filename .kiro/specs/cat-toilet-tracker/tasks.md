@@ -51,7 +51,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - _Requirements: WF3-11_
 
 - [ ] 3. バックエンド API 基盤構築
-- [ ] 3.1 apps/api の初期化と Hono セットアップ
+- [x] 3.1 apps/api の初期化と Hono セットアップ
   - apps/api パッケージを作成
   - Hono v4 をインストール
   - Cloudflare Workers 用の wrangler.toml を作成

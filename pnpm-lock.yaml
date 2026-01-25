@@ -23,13 +23,22 @@ importers:
       '@nekolog/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      hono:
+        specifier: ^4.11.5
+        version: 4.11.5
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20260118.0
         version: 4.20260118.0
+      '@hono/node-server':
+        specifier: ^1.19.9
+        version: 1.19.9(hono@4.11.5)
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18
       wrangler:
         specifier: ^3.99.0
         version: 3.114.17(@cloudflare/workers-types@4.20260118.0)
@@ -420,6 +429,12 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
+  '@hono/node-server@1.19.9':
+    resolution: {integrity: sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      hono: ^4
+
   '@img/sharp-darwin-arm64@0.33.5':
     resolution: {integrity: sha512-UT4p+iz/2H4twwAoLCqfA9UH5pI6DggwKEGuaPy7nCVQ8ZsiY5PIcrRvD1DzuY3qYL07NtIQcWnBSY/heikIFQ==}
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
@@ -805,6 +820,10 @@ packages:
 
   glob-to-regexp@0.4.1:
     resolution: {integrity: sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw==}
+
+  hono@4.11.5:
+    resolution: {integrity: sha512-WemPi9/WfyMwZs+ZUXdiwcCh9Y+m7L+8vki9MzDw3jJ+W9Lc+12HGsd368Qc1vZi1xwW8BWMMsnK5efYKPdt4g==}
+    engines: {node: '>=16.9.0'}
 
   is-arrayish@0.3.4:
     resolution: {integrity: sha512-m6UrgzFVUYawGBh1dUsWR5M2Clqic9RVXC/9f8ceNlv2IcO9j9J/z8UoCLPqtsPBFNzEpfR3xftohbfqDx8EQA==}
@@ -1300,6 +1319,10 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
+  '@hono/node-server@1.19.9(hono@4.11.5)':
+    dependencies:
+      hono: 4.11.5
+
   '@img/sharp-darwin-arm64@0.33.5':
     optionalDependencies:
       '@img/sharp-libvips-darwin-arm64': 1.0.4
@@ -1635,6 +1658,8 @@ snapshots:
       source-map: 0.6.1
 
   glob-to-regexp@0.4.1: {}
+
+  hono@4.11.5: {}
 
   is-arrayish@0.3.4:
     optional: true
