@@ -158,7 +158,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - _Requirements: WF11_
 
 - [ ] 7. フロントエンド基盤構築
-- [ ] 7.1 apps/web の初期化と React + Vite セットアップ
+- [x] 7.1 apps/web の初期化と React + Vite セットアップ
   - apps/web パッケージを作成
   - Vite + React + TypeScript の設定
   - Tailwind CSS と shadcn/ui のセットアップ
