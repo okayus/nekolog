@@ -165,7 +165,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - Hono Client (hc) の設定と AppType の型インポート
   - _Requirements: NFR1_
 
-- [ ] 7.2 TanStack Query と API クライアントの設定
+- [x] 7.2 TanStack Query と API クライアントの設定
   - TanStack Query v5 のプロバイダー設定
   - Hono RPC クライアントの初期化
   - 共通のエラーハンドリング設定
