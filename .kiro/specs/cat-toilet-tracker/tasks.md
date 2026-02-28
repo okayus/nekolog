@@ -144,7 +144,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - _Requirements: WF7-10_
 
 - [ ] 6. 統計ワークフローと API の実装
-- [ ] 6.1 統計ワークフローの実装（GetDashboardStats）
+- [x] 6.1 統計ワークフローの実装（GetDashboardStats）
   - getDailySummary: 本日の全猫サマリー取得
   - getChartData: 期間別・猫別のチャートデータ取得
   - 日別・週別・月別の集計ロジック
