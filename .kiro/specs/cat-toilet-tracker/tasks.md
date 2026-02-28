@@ -189,7 +189,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - バリデーションエラーの表示
   - _Requirements: WF3, WF6_
 
-- [ ] 8.2 猫編集・削除機能の実装
+- [x] 8.2 猫編集・削除機能の実装
   - 猫編集フォーム
   - 削除確認ダイアログ
   - 削除時の関連データ削除の警告表示
