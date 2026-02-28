@@ -10,6 +10,7 @@ import { Header } from "./components/header";
 import { ProtectedRoute } from "./lib/auth";
 import { LoginPage } from "./pages/login";
 import { CatsPage } from "./pages/cats";
+import { LogsPage } from "./pages/logs";
 
 function DashboardPlaceholder() {
   return <p>ダッシュボード</p>;
@@ -30,6 +31,7 @@ function App() {
                   <Routes>
                     <Route index element={<DashboardPlaceholder />} />
                     <Route path="cats" element={<CatsPage />} />
+                    <Route path="logs" element={<LogsPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>

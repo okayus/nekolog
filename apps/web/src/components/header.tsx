@@ -16,6 +16,9 @@ export function Header() {
             <Link to="/cats" className="text-sm hover:underline">
               猫の管理
             </Link>
+            <Link to="/logs" className="text-sm hover:underline">
+              トイレ記録
+            </Link>
           </nav>
         </div>
         <UserButton />

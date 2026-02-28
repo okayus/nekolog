@@ -197,7 +197,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - _Requirements: WF4, WF5_
 
 - [ ] 9. トイレ記録 UI の実装
-- [ ] 9.1 クイック記録フォームの実装
+- [x] 9.1 クイック記録フォームの実装
   - トイレ記録追加フォーム（LogForm）
   - 猫選択ドロップダウン
   - 排尿/排便のトグルボタン

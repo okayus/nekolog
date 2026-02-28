@@ -5,7 +5,13 @@
  * Clerk セッションは Cookie で自動送信される。
  */
 
-import type { Cat, CreateCatInput, UpdateCatInput } from "@nekolog/shared";
+import type {
+  Cat,
+  CreateCatInput,
+  UpdateCatInput,
+  ToiletLog,
+  CreateLogInput,
+} from "@nekolog/shared";
 
 const API_BASE = "/api";
 
@@ -70,6 +76,19 @@ export async function uploadCatImage(
   const res = await fetch(`${API_BASE}/cats/${catId}/image`, {
     method: "POST",
     body: formData,
+  });
+  return handleResponse(res);
+}
+
+// --- Logs ---
+
+export async function createLog(
+  data: CreateLogInput
+): Promise<{ log: ToiletLog }> {
+  const res = await fetch(`${API_BASE}/logs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
   });
   return handleResponse(res);
 }
