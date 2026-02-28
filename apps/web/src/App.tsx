@@ -11,6 +11,7 @@ import { ProtectedRoute } from "./lib/auth";
 import { LoginPage } from "./pages/login";
 import { CatsPage } from "./pages/cats";
 import { LogsPage } from "./pages/logs";
+import { HistoryPage } from "./pages/history";
 
 function DashboardPlaceholder() {
   return <p>ダッシュボード</p>;
@@ -32,6 +33,7 @@ function App() {
                     <Route index element={<DashboardPlaceholder />} />
                     <Route path="cats" element={<CatsPage />} />
                     <Route path="logs" element={<LogsPage />} />
+                    <Route path="history" element={<HistoryPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>

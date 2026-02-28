@@ -11,6 +11,8 @@ import type {
   UpdateCatInput,
   ToiletLog,
   CreateLogInput,
+  UpdateLogInput,
+  PaginatedLogs,
 } from "@nekolog/shared";
 
 const API_BASE = "/api";
@@ -90,5 +92,44 @@ export async function createLog(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
+  return handleResponse(res);
+}
+
+export async function fetchLogs(
+  params?: Record<string, string | undefined>
+): Promise<PaginatedLogs<ToiletLog>> {
+  const query = new URLSearchParams();
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== "") {
+        query.set(key, value);
+      }
+    }
+  }
+  const qs = query.toString();
+  const res = await fetch(`${API_BASE}/logs${qs ? `?${qs}` : ""}`);
+  return handleResponse(res);
+}
+
+export async function updateLog(
+  id: string,
+  data: UpdateLogInput
+): Promise<{ log: ToiletLog }> {
+  const res = await fetch(`${API_BASE}/logs/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
+
+export async function deleteLog(
+  id: string,
+  confirmed: boolean
+): Promise<{ success: boolean }> {
+  const res = await fetch(
+    `${API_BASE}/logs/${id}?confirmed=${confirmed}`,
+    { method: "DELETE" }
+  );
   return handleResponse(res);
 }

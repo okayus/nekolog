@@ -207,7 +207,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - バリデーションエラーの表示
   - _Requirements: WF7_
 
-- [ ] 9.2 記録履歴ページの実装
+- [x] 9.2 記録履歴ページの実装
   - 履歴一覧ページ（HistoryPage）
   - 時系列での記録表示
   - 猫・期間・種類でのフィルタリング UI

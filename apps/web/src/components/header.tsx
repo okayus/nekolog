@@ -19,6 +19,9 @@ export function Header() {
             <Link to="/logs" className="text-sm hover:underline">
               トイレ記録
             </Link>
+            <Link to="/history" className="text-sm hover:underline">
+              履歴
+            </Link>
           </nav>
         </div>
         <UserButton />
