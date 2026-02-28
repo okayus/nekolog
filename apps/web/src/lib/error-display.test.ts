@@ -27,6 +27,18 @@ describe("getErrorMessage", () => {
     expect(getErrorMessage(error)).toBe("サーバーエラーが発生しました。しばらく経ってから再度お試しください。");
   });
 
+  it("should return fallback for incomplete validation error (missing message)", () => {
+    expect(getErrorMessage({ type: "validation" })).toBe("入力内容に誤りがあります");
+  });
+
+  it("should return fallback for incomplete not_found error (missing resource)", () => {
+    expect(getErrorMessage({ type: "not_found" })).toBe("リソースが見つかりません");
+  });
+
+  it("should return fallback for incomplete unauthorized error (missing message)", () => {
+    expect(getErrorMessage({ type: "unauthorized" })).toBe("認証が必要です");
+  });
+
   it("should return generic message for unknown error shape", () => {
     expect(getErrorMessage(null)).toBe("予期しないエラーが発生しました");
     expect(getErrorMessage(undefined)).toBe("予期しないエラーが発生しました");

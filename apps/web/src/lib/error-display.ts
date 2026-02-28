@@ -1,23 +1,22 @@
-import type { DomainError } from "@nekolog/shared";
-
 /**
  * DomainError からユーザー向けメッセージを取得する。
  * API レスポンスのエラーを表示用テキストに変換する。
+ * unknown を受け取っても常に string を返す不変条件を保証する。
  */
 export function getErrorMessage(error: unknown): string {
   if (!error || typeof error !== "object" || !("type" in error)) {
     return "予期しないエラーが発生しました";
   }
 
-  const domainError = error as DomainError;
+  const e = error as Record<string, unknown>;
 
-  switch (domainError.type) {
+  switch (e["type"]) {
     case "validation":
-      return domainError.message;
+      return typeof e["message"] === "string" ? e["message"] : "入力内容に誤りがあります";
     case "not_found":
-      return `${domainError.resource}が見つかりません`;
+      return typeof e["resource"] === "string" ? `${e["resource"]}が見つかりません` : "リソースが見つかりません";
     case "unauthorized":
-      return domainError.message;
+      return typeof e["message"] === "string" ? e["message"] : "認証が必要です";
     case "confirmation_required":
       return "この操作には確認が必要です";
     case "database":
