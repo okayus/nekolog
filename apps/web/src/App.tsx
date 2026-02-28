@@ -2,20 +2,41 @@
  * Root Application Component
  *
  * Entry point for the NekoLog React SPA.
+ * Defines routing and layout structure.
  */
+
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Header } from "./components/header";
+import { ProtectedRoute } from "./lib/auth";
+import { LoginPage } from "./pages/login";
+
+function DashboardPlaceholder() {
+  return <p>ダッシュボード</p>;
+}
 
 function App() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold">NekoLog</h1>
-        </div>
-      </header>
-      <main className="container mx-auto px-4 py-8">
-        <p>猫トイレ記録アプリ</p>
-      </main>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute>
+              <div className="min-h-screen bg-background text-foreground">
+                <Header />
+                <main className="container mx-auto px-4 py-8">
+                  <Routes>
+                    <Route index element={<DashboardPlaceholder />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </main>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

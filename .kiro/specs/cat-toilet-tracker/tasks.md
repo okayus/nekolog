@@ -172,7 +172,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - DomainError のフロントエンド表示ヘルパー
   - _Requirements: N/A（インフラ基盤）_
 
-- [ ] 7.3 Clerk 認証 UI の統合
+- [x] 7.3 Clerk 認証 UI の統合
   - @clerk/clerk-react のセットアップ
   - ClerkProvider の設定
   - ログインページとサインインコンポーネント
