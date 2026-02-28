@@ -347,7 +347,7 @@ export const createLogRepository = (db: D1Database): LogRepository => {
           ? sql`substr(${toiletLogs.timestamp}, 1, 10)`
           : period === "monthly"
             ? sql`substr(${toiletLogs.timestamp}, 1, 7)`
-            : sql`date(${toiletLogs.timestamp}, 'weekday 1', '-7 days')`;
+            : sql`date(${toiletLogs.timestamp}, '-6 days', 'weekday 1')`;
 
       const conditions = [
         eq(cats.userId, userId),

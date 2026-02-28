@@ -333,6 +333,43 @@ describe("Stats Workflows", () => {
       );
     });
 
+    it("should keep Monday logs in the same week bucket", async () => {
+      // Monday 2024-01-08 logs must be grouped under week starting 2024-01-08,
+      // not the previous week. This verifies the fix for the weekday key bug.
+      vi.mocked(mockLogRepo.aggregateByPeriod).mockReturnValue(
+        okAsync([
+          { date: "2024-01-08", urineCount: 3, fecesCount: 1 },
+        ])
+      );
+
+      const query = {
+        period: "week" as const,
+        from: "2024-01-08T00:00:00.000Z",
+        to: "2024-01-14T23:59:59.999Z",
+      };
+
+      const result = await getChartData(
+        query,
+        userId,
+        mockCatRepo,
+        mockLogRepo
+      );
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        const chart = result.value;
+        expect(chart.period).toBe("weekly");
+        expect(chart.data).toHaveLength(1);
+
+        // Monday logs must appear under 2024-01-08, NOT 2024-01-01
+        const week = chart.data[0]!;
+        expect(week.date).toBe("2024-01-08");
+        expect(week.urineCount).toBe(3);
+        expect(week.fecesCount).toBe(1);
+        expect(week.totalCount).toBe(4);
+      }
+    });
+
     it("should aggregate by month for monthly period", async () => {
       vi.mocked(mockLogRepo.aggregateByPeriod).mockReturnValue(
         okAsync([
