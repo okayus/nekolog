@@ -22,6 +22,9 @@ export function Header() {
             <Link to="/history" className="text-sm hover:underline">
               履歴
             </Link>
+            <Link to="/stats" className="text-sm hover:underline">
+              統計
+            </Link>
           </nav>
         </div>
         <UserButton />

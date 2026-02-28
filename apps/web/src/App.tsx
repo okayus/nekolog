@@ -13,6 +13,7 @@ import { CatsPage } from "./pages/cats";
 import { LogsPage } from "./pages/logs";
 import { HistoryPage } from "./pages/history";
 import { DashboardPage } from "./pages/dashboard";
+import { StatsPage } from "./pages/stats";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
                     <Route path="cats" element={<CatsPage />} />
                     <Route path="logs" element={<LogsPage />} />
                     <Route path="history" element={<HistoryPage />} />
+                    <Route path="stats" element={<StatsPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>

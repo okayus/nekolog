@@ -14,6 +14,7 @@ import type {
   UpdateLogInput,
   PaginatedLogs,
   DailySummary,
+  ChartData,
 } from "@nekolog/shared";
 
 const API_BASE = "/api";
@@ -139,5 +140,21 @@ export async function deleteLog(
 
 export async function fetchDailySummary(): Promise<DailySummary> {
   const res = await fetch(`${API_BASE}/stats/summary`);
+  return handleResponse(res);
+}
+
+export async function fetchChartData(
+  params?: Record<string, string | undefined>
+): Promise<ChartData> {
+  const query = new URLSearchParams();
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== "") {
+        query.set(key, value);
+      }
+    }
+  }
+  const qs = query.toString();
+  const res = await fetch(`${API_BASE}/stats/chart${qs ? `?${qs}` : ""}`);
   return handleResponse(res);
 }
