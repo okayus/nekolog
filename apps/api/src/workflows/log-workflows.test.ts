@@ -60,6 +60,8 @@ describe("Log Workflows", () => {
       delete: vi.fn(),
       findById: vi.fn(),
       findWithFilters: vi.fn(),
+      aggregateByCat: vi.fn(),
+      aggregateByPeriod: vi.fn(),
     };
   });
 
