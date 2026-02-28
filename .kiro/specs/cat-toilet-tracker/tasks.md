@@ -152,7 +152,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - ResultAsync<T, DomainError> を返す
   - _Requirements: WF11_
 
-- [ ] 6.2 統計 API ルートの実装
+- [x] 6.2 統計 API ルートの実装
   - GET /api/stats/summary → getDailySummary workflow → match
   - GET /api/stats/chart?catId&period&from&to → getChartData workflow → match
   - _Requirements: WF11_
