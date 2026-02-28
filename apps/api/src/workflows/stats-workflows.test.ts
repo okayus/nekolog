@@ -4,7 +4,7 @@ import { DomainErrors } from "@nekolog/shared";
 import { getDailySummary, getChartData } from "./stats-workflows";
 import type { CatRepository } from "../repositories/cat-repository";
 import type { LogRepository } from "../repositories/log-repository";
-import type { Cat, ToiletLog } from "../db/schema";
+import type { Cat } from "../db/schema";
 
 describe("Stats Workflows", () => {
   const userId = "user_123";
@@ -53,67 +53,34 @@ describe("Stats Workflows", () => {
       delete: vi.fn(),
       findById: vi.fn(),
       findWithFilters: vi.fn(),
+      aggregateByCat: vi.fn(),
+      aggregateByPeriod: vi.fn(),
     };
   });
 
   describe("getDailySummary", () => {
-    it("should return summary for all cats with today's logs", async () => {
+    it("should return summary for all cats using DB aggregation", async () => {
       vi.mocked(mockCatRepo.findAllByUserId).mockReturnValue(
         okAsync([mockCat1, mockCat2])
       );
-
-      const todayDate = "2024-01-15";
-      const logs: ToiletLog[] = [
-        {
-          id: "log1",
-          catId: catId1,
-          type: "urine",
-          timestamp: `${todayDate}T08:00:00.000Z`,
-          note: null,
-          createdAt: `${todayDate}T08:00:00.000Z`,
-          updatedAt: `${todayDate}T08:00:00.000Z`,
-        },
-        {
-          id: "log2",
-          catId: catId1,
-          type: "feces",
-          timestamp: `${todayDate}T12:00:00.000Z`,
-          note: null,
-          createdAt: `${todayDate}T12:00:00.000Z`,
-          updatedAt: `${todayDate}T12:00:00.000Z`,
-        },
-        {
-          id: "log3",
-          catId: catId2,
-          type: "urine",
-          timestamp: `${todayDate}T10:00:00.000Z`,
-          note: null,
-          createdAt: `${todayDate}T10:00:00.000Z`,
-          updatedAt: `${todayDate}T10:00:00.000Z`,
-        },
-      ];
-
-      vi.mocked(mockLogRepo.findWithFilters).mockReturnValue(
-        okAsync({
-          logs,
-          total: logs.length,
-          page: 1,
-          limit: 1000,
-          totalPages: 1,
-        })
+      vi.mocked(mockLogRepo.aggregateByCat).mockReturnValue(
+        okAsync([
+          { catId: catId1, urineCount: 1, fecesCount: 1 },
+          { catId: catId2, urineCount: 1, fecesCount: 0 },
+        ])
       );
 
       const result = await getDailySummary(
         userId,
         mockCatRepo,
         mockLogRepo,
-        todayDate
+        "2024-01-15"
       );
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
         const summary = result.value;
-        expect(summary.date).toBe(todayDate);
+        expect(summary.date).toBe("2024-01-15");
         expect(summary.cats).toHaveLength(2);
 
         const cat1Summary = summary.cats.find((c) => c.catId === catId1);
@@ -134,21 +101,22 @@ describe("Stats Workflows", () => {
         expect(summary.totalFecesCount).toBe(1);
         expect(summary.totalCount).toBe(3);
       }
+
+      // Verify aggregateByCat was called with correct date range
+      expect(mockLogRepo.aggregateByCat).toHaveBeenCalledWith(
+        userId,
+        "2024-01-15T00:00:00.000Z",
+        "2024-01-15T23:59:59.999Z"
+      );
+      // Verify findWithFilters was NOT called (no longer used for stats)
+      expect(mockLogRepo.findWithFilters).not.toHaveBeenCalled();
     });
 
     it("should return zero counts when no logs exist", async () => {
       vi.mocked(mockCatRepo.findAllByUserId).mockReturnValue(
         okAsync([mockCat1])
       );
-      vi.mocked(mockLogRepo.findWithFilters).mockReturnValue(
-        okAsync({
-          logs: [],
-          total: 0,
-          page: 1,
-          limit: 1000,
-          totalPages: 0,
-        })
-      );
+      vi.mocked(mockLogRepo.aggregateByCat).mockReturnValue(okAsync([]));
 
       const result = await getDailySummary(
         userId,
@@ -170,15 +138,7 @@ describe("Stats Workflows", () => {
 
     it("should return empty cats array when user has no cats", async () => {
       vi.mocked(mockCatRepo.findAllByUserId).mockReturnValue(okAsync([]));
-      vi.mocked(mockLogRepo.findWithFilters).mockReturnValue(
-        okAsync({
-          logs: [],
-          total: 0,
-          page: 1,
-          limit: 1000,
-          totalPages: 0,
-        })
-      );
+      vi.mocked(mockLogRepo.aggregateByCat).mockReturnValue(okAsync([]));
 
       const result = await getDailySummary(
         userId,
@@ -216,7 +176,7 @@ describe("Stats Workflows", () => {
       vi.mocked(mockCatRepo.findAllByUserId).mockReturnValue(
         okAsync([mockCat1])
       );
-      vi.mocked(mockLogRepo.findWithFilters).mockReturnValue(
+      vi.mocked(mockLogRepo.aggregateByCat).mockReturnValue(
         errAsync(DomainErrors.database("DB error"))
       );
 
@@ -237,45 +197,11 @@ describe("Stats Workflows", () => {
   describe("getChartData", () => {
     it("should return daily chart data for a specific cat", async () => {
       vi.mocked(mockCatRepo.findById).mockReturnValue(okAsync(mockCat1));
-
-      const logs: ToiletLog[] = [
-        {
-          id: "log1",
-          catId: catId1,
-          type: "urine",
-          timestamp: "2024-01-13T08:00:00.000Z",
-          note: null,
-          createdAt: "2024-01-13T08:00:00.000Z",
-          updatedAt: "2024-01-13T08:00:00.000Z",
-        },
-        {
-          id: "log2",
-          catId: catId1,
-          type: "urine",
-          timestamp: "2024-01-13T14:00:00.000Z",
-          note: null,
-          createdAt: "2024-01-13T14:00:00.000Z",
-          updatedAt: "2024-01-13T14:00:00.000Z",
-        },
-        {
-          id: "log3",
-          catId: catId1,
-          type: "feces",
-          timestamp: "2024-01-14T09:00:00.000Z",
-          note: null,
-          createdAt: "2024-01-14T09:00:00.000Z",
-          updatedAt: "2024-01-14T09:00:00.000Z",
-        },
-      ];
-
-      vi.mocked(mockLogRepo.findWithFilters).mockReturnValue(
-        okAsync({
-          logs,
-          total: logs.length,
-          page: 1,
-          limit: 1000,
-          totalPages: 1,
-        })
+      vi.mocked(mockLogRepo.aggregateByPeriod).mockReturnValue(
+        okAsync([
+          { date: "2024-01-13", urineCount: 2, fecesCount: 0 },
+          { date: "2024-01-14", urineCount: 0, fecesCount: 1 },
+        ])
       );
 
       const query = {
@@ -312,38 +238,21 @@ describe("Stats Workflows", () => {
         expect(day2!.fecesCount).toBe(1);
         expect(day2!.totalCount).toBe(1);
       }
+
+      // Verify aggregateByPeriod was called correctly
+      expect(mockLogRepo.aggregateByPeriod).toHaveBeenCalledWith(
+        userId,
+        "2024-01-13T00:00:00.000Z",
+        "2024-01-14T23:59:59.999Z",
+        "daily",
+        catId1
+      );
+      expect(mockLogRepo.findWithFilters).not.toHaveBeenCalled();
     });
 
     it("should return chart data for all cats when no catId specified", async () => {
-      const logs: ToiletLog[] = [
-        {
-          id: "log1",
-          catId: catId1,
-          type: "urine",
-          timestamp: "2024-01-13T08:00:00.000Z",
-          note: null,
-          createdAt: "2024-01-13T08:00:00.000Z",
-          updatedAt: "2024-01-13T08:00:00.000Z",
-        },
-        {
-          id: "log2",
-          catId: catId2,
-          type: "feces",
-          timestamp: "2024-01-13T10:00:00.000Z",
-          note: null,
-          createdAt: "2024-01-13T10:00:00.000Z",
-          updatedAt: "2024-01-13T10:00:00.000Z",
-        },
-      ];
-
-      vi.mocked(mockLogRepo.findWithFilters).mockReturnValue(
-        okAsync({
-          logs,
-          total: logs.length,
-          page: 1,
-          limit: 1000,
-          totalPages: 1,
-        })
+      vi.mocked(mockLogRepo.aggregateByPeriod).mockReturnValue(
+        okAsync([{ date: "2024-01-13", urineCount: 1, fecesCount: 1 }])
       );
 
       const query = {
@@ -376,44 +285,11 @@ describe("Stats Workflows", () => {
     });
 
     it("should aggregate by week for weekly period", async () => {
-      const logs: ToiletLog[] = [
-        {
-          id: "log1",
-          catId: catId1,
-          type: "urine",
-          timestamp: "2024-01-08T08:00:00.000Z", // Monday week 2
-          note: null,
-          createdAt: "2024-01-08T08:00:00.000Z",
-          updatedAt: "2024-01-08T08:00:00.000Z",
-        },
-        {
-          id: "log2",
-          catId: catId1,
-          type: "feces",
-          timestamp: "2024-01-10T09:00:00.000Z", // Wednesday week 2
-          note: null,
-          createdAt: "2024-01-10T09:00:00.000Z",
-          updatedAt: "2024-01-10T09:00:00.000Z",
-        },
-        {
-          id: "log3",
-          catId: catId1,
-          type: "urine",
-          timestamp: "2024-01-15T10:00:00.000Z", // Monday week 3
-          note: null,
-          createdAt: "2024-01-15T10:00:00.000Z",
-          updatedAt: "2024-01-15T10:00:00.000Z",
-        },
-      ];
-
-      vi.mocked(mockLogRepo.findWithFilters).mockReturnValue(
-        okAsync({
-          logs,
-          total: logs.length,
-          page: 1,
-          limit: 1000,
-          totalPages: 1,
-        })
+      vi.mocked(mockLogRepo.aggregateByPeriod).mockReturnValue(
+        okAsync([
+          { date: "2024-01-08", urineCount: 1, fecesCount: 1 },
+          { date: "2024-01-15", urineCount: 1, fecesCount: 0 },
+        ])
       );
 
       const query = {
@@ -435,61 +311,34 @@ describe("Stats Workflows", () => {
         expect(chart.period).toBe("weekly");
         expect(chart.data).toHaveLength(2);
 
-        // Week starting 2024-01-08
         const week1 = chart.data.find((d) => d.date === "2024-01-08");
         expect(week1).toBeDefined();
         expect(week1!.urineCount).toBe(1);
         expect(week1!.fecesCount).toBe(1);
         expect(week1!.totalCount).toBe(2);
 
-        // Week starting 2024-01-15
         const week2 = chart.data.find((d) => d.date === "2024-01-15");
         expect(week2).toBeDefined();
         expect(week2!.urineCount).toBe(1);
         expect(week2!.fecesCount).toBe(0);
         expect(week2!.totalCount).toBe(1);
       }
+
+      expect(mockLogRepo.aggregateByPeriod).toHaveBeenCalledWith(
+        userId,
+        "2024-01-08T00:00:00.000Z",
+        "2024-01-21T23:59:59.999Z",
+        "weekly",
+        undefined
+      );
     });
 
     it("should aggregate by month for monthly period", async () => {
-      const logs: ToiletLog[] = [
-        {
-          id: "log1",
-          catId: catId1,
-          type: "urine",
-          timestamp: "2024-01-05T08:00:00.000Z",
-          note: null,
-          createdAt: "2024-01-05T08:00:00.000Z",
-          updatedAt: "2024-01-05T08:00:00.000Z",
-        },
-        {
-          id: "log2",
-          catId: catId1,
-          type: "feces",
-          timestamp: "2024-01-20T09:00:00.000Z",
-          note: null,
-          createdAt: "2024-01-20T09:00:00.000Z",
-          updatedAt: "2024-01-20T09:00:00.000Z",
-        },
-        {
-          id: "log3",
-          catId: catId1,
-          type: "urine",
-          timestamp: "2024-02-10T10:00:00.000Z",
-          note: null,
-          createdAt: "2024-02-10T10:00:00.000Z",
-          updatedAt: "2024-02-10T10:00:00.000Z",
-        },
-      ];
-
-      vi.mocked(mockLogRepo.findWithFilters).mockReturnValue(
-        okAsync({
-          logs,
-          total: logs.length,
-          page: 1,
-          limit: 1000,
-          totalPages: 1,
-        })
+      vi.mocked(mockLogRepo.aggregateByPeriod).mockReturnValue(
+        okAsync([
+          { date: "2024-01", urineCount: 1, fecesCount: 1 },
+          { date: "2024-02", urineCount: 1, fecesCount: 0 },
+        ])
       );
 
       const query = {
@@ -526,15 +375,7 @@ describe("Stats Workflows", () => {
     });
 
     it("should return empty data when no logs exist", async () => {
-      vi.mocked(mockLogRepo.findWithFilters).mockReturnValue(
-        okAsync({
-          logs: [],
-          total: 0,
-          page: 1,
-          limit: 1000,
-          totalPages: 0,
-        })
-      );
+      vi.mocked(mockLogRepo.aggregateByPeriod).mockReturnValue(okAsync([]));
 
       const query = {
         period: "today" as const,
@@ -601,7 +442,7 @@ describe("Stats Workflows", () => {
     });
 
     it("should propagate database error from logRepo", async () => {
-      vi.mocked(mockLogRepo.findWithFilters).mockReturnValue(
+      vi.mocked(mockLogRepo.aggregateByPeriod).mockReturnValue(
         errAsync(DomainErrors.database("DB error"))
       );
 

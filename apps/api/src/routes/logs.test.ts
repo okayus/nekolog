@@ -28,6 +28,8 @@ const mockLogRepo = {
   delete: vi.fn(),
   findById: vi.fn(),
   findWithFilters: vi.fn(),
+  aggregateByCat: vi.fn(),
+  aggregateByPeriod: vi.fn(),
 };
 
 vi.mock("../repositories/log-repository", () => ({

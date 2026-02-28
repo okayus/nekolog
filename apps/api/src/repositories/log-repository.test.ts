@@ -9,9 +9,11 @@ const mockValues = vi.fn(() => ({ returning: mockReturning }));
 const mockSet = vi.fn(() => ({ where: mockMutationWhere }));
 const mockOffset = vi.fn();
 const mockLimit = vi.fn(() => ({ offset: mockOffset }));
+const mockAggOrderBy = vi.fn();
+const mockGroupBy = vi.fn<any>(() => ({ orderBy: mockAggOrderBy }));
 const mockOrderBy = vi.fn(() => ({ limit: mockLimit }));
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockJoinedWhere = vi.fn<any>(() => ({ orderBy: mockOrderBy }));
+const mockJoinedWhere = vi.fn<any>(() => ({ orderBy: mockOrderBy, groupBy: mockGroupBy }));
 const mockInnerJoin = vi.fn(() => ({ where: mockJoinedWhere }));
 const mockFrom = vi.fn(() => ({ innerJoin: mockInnerJoin }));
 const mockDeleteWhere = vi.fn();
@@ -329,6 +331,133 @@ describe("LogRepository", () => {
         page: 1,
         limit: 20,
       });
+
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        expect(result.error.type).toBe("database");
+      }
+    });
+  });
+
+  describe("aggregateByCat", () => {
+    it("should return aggregated counts per cat", async () => {
+      const aggregated = [
+        { catId: "cat_456", urineCount: 3, fecesCount: 1 },
+        { catId: "cat_789", urineCount: 2, fecesCount: 2 },
+      ];
+      mockGroupBy.mockResolvedValueOnce(aggregated);
+
+      const result = await repository.aggregateByCat(
+        "user_789",
+        "2024-01-01T00:00:00.000Z",
+        "2024-01-01T23:59:59.999Z"
+      );
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value).toHaveLength(2);
+        expect(result.value[0]!.catId).toBe("cat_456");
+        expect(result.value[0]!.urineCount).toBe(3);
+        expect(result.value[0]!.fecesCount).toBe(1);
+      }
+    });
+
+    it("should return empty array when no logs exist", async () => {
+      mockGroupBy.mockResolvedValueOnce([]);
+
+      const result = await repository.aggregateByCat(
+        "user_789",
+        "2024-01-01T00:00:00.000Z",
+        "2024-01-01T23:59:59.999Z"
+      );
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value).toEqual([]);
+      }
+    });
+
+    it("should return database error on failure", async () => {
+      mockGroupBy.mockRejectedValueOnce(new Error("DB error"));
+
+      const result = await repository.aggregateByCat(
+        "user_789",
+        "2024-01-01T00:00:00.000Z",
+        "2024-01-01T23:59:59.999Z"
+      );
+
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        expect(result.error.type).toBe("database");
+      }
+    });
+  });
+
+  describe("aggregateByPeriod", () => {
+    it("should return aggregated counts per period", async () => {
+      const aggregated = [
+        { date: "2024-01-01", urineCount: 2, fecesCount: 1 },
+        { date: "2024-01-02", urineCount: 3, fecesCount: 0 },
+      ];
+      mockAggOrderBy.mockResolvedValueOnce(aggregated);
+
+      const result = await repository.aggregateByPeriod(
+        "user_789",
+        "2024-01-01T00:00:00.000Z",
+        "2024-01-02T23:59:59.999Z",
+        "daily"
+      );
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value).toHaveLength(2);
+        expect(result.value[0]!.date).toBe("2024-01-01");
+        expect(result.value[0]!.urineCount).toBe(2);
+        expect(result.value[1]!.date).toBe("2024-01-02");
+      }
+    });
+
+    it("should return empty array when no logs exist", async () => {
+      mockAggOrderBy.mockResolvedValueOnce([]);
+
+      const result = await repository.aggregateByPeriod(
+        "user_789",
+        "2024-01-01T00:00:00.000Z",
+        "2024-01-31T23:59:59.999Z",
+        "monthly"
+      );
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value).toEqual([]);
+      }
+    });
+
+    it("should accept optional catId filter", async () => {
+      mockAggOrderBy.mockResolvedValueOnce([
+        { date: "2024-01-01", urineCount: 1, fecesCount: 0 },
+      ]);
+
+      const result = await repository.aggregateByPeriod(
+        "user_789",
+        "2024-01-01T00:00:00.000Z",
+        "2024-01-01T23:59:59.999Z",
+        "daily",
+        "cat_456"
+      );
+
+      expect(result.isOk()).toBe(true);
+    });
+
+    it("should return database error on failure", async () => {
+      mockAggOrderBy.mockRejectedValueOnce(new Error("DB error"));
+
+      const result = await repository.aggregateByPeriod(
+        "user_789",
+        "2024-01-01T00:00:00.000Z",
+        "2024-01-31T23:59:59.999Z",
+        "weekly"
+      );
 
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {

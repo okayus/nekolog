@@ -18,6 +18,24 @@ import {
 import { toiletLogs, cats, type ToiletLog, type NewToiletLog } from "../db/schema";
 
 /**
+ * Aggregated counts per cat for a date range.
+ */
+export interface CatAggregate {
+  catId: string;
+  urineCount: number;
+  fecesCount: number;
+}
+
+/**
+ * Aggregated counts per period bucket for a date range.
+ */
+export interface PeriodAggregate {
+  date: string;
+  urineCount: number;
+  fecesCount: number;
+}
+
+/**
  * Log Repository Interface
  * Defines the contract for toilet log data access operations.
  */
@@ -34,6 +52,18 @@ export interface LogRepository {
     userId: string,
     query: LogsQuery
   ): ResultAsync<PaginatedLogs<ToiletLog>, DomainError>;
+  aggregateByCat(
+    userId: string,
+    from: string,
+    to: string
+  ): ResultAsync<CatAggregate[], DomainError>;
+  aggregateByPeriod(
+    userId: string,
+    from: string,
+    to: string,
+    period: "daily" | "weekly" | "monthly",
+    catId?: string
+  ): ResultAsync<PeriodAggregate[], DomainError>;
 }
 
 /**
@@ -252,6 +282,100 @@ export const createLogRepository = (db: D1Database): LogRepository => {
         (error) => {
           console.error("[LogRepository.findWithFilters]", error);
           return DomainErrors.database("Failed to find toilet logs");
+        }
+      );
+    },
+
+    /**
+     * Aggregates toilet log counts by cat for a date range.
+     * Uses DB-level GROUP BY to guarantee complete results.
+     *
+     * @param userId - Owner user ID
+     * @param from - Start of date range (ISO string)
+     * @param to - End of date range (ISO string)
+     * @returns Per-cat urine/feces counts or database error
+     */
+    aggregateByCat: (
+      userId: string,
+      from: string,
+      to: string
+    ): ResultAsync<CatAggregate[], DomainError> => {
+      return ResultAsync.fromPromise(
+        drizzleDb
+          .select({
+            catId: toiletLogs.catId,
+            urineCount: sql<number>`sum(case when ${toiletLogs.type} = 'urine' then 1 else 0 end)`,
+            fecesCount: sql<number>`sum(case when ${toiletLogs.type} = 'feces' then 1 else 0 end)`,
+          })
+          .from(toiletLogs)
+          .innerJoin(cats, eq(toiletLogs.catId, cats.id))
+          .where(
+            and(
+              eq(cats.userId, userId),
+              gte(toiletLogs.timestamp, from),
+              lte(toiletLogs.timestamp, to)
+            )
+          )
+          .groupBy(toiletLogs.catId),
+        (error) => {
+          console.error("[LogRepository.aggregateByCat]", error);
+          return DomainErrors.database("Failed to aggregate toilet logs by cat");
+        }
+      );
+    },
+
+    /**
+     * Aggregates toilet log counts by time period for a date range.
+     * Uses DB-level GROUP BY to guarantee complete results.
+     *
+     * @param userId - Owner user ID
+     * @param from - Start of date range (ISO string)
+     * @param to - End of date range (ISO string)
+     * @param period - Grouping period: daily, weekly, or monthly
+     * @param catId - Optional cat ID filter
+     * @returns Per-period urine/feces counts or database error
+     */
+    aggregateByPeriod: (
+      userId: string,
+      from: string,
+      to: string,
+      period: "daily" | "weekly" | "monthly",
+      catId?: string
+    ): ResultAsync<PeriodAggregate[], DomainError> => {
+      const periodKey =
+        period === "daily"
+          ? sql`substr(${toiletLogs.timestamp}, 1, 10)`
+          : period === "monthly"
+            ? sql`substr(${toiletLogs.timestamp}, 1, 7)`
+            : sql`date(${toiletLogs.timestamp}, 'weekday 1', '-7 days')`;
+
+      const conditions = [
+        eq(cats.userId, userId),
+        gte(toiletLogs.timestamp, from),
+        lte(toiletLogs.timestamp, to),
+      ];
+
+      if (catId) {
+        conditions.push(eq(toiletLogs.catId, catId));
+      }
+
+      return ResultAsync.fromPromise(
+        drizzleDb
+          .select({
+            date: sql<string>`${periodKey}`,
+            urineCount: sql<number>`sum(case when ${toiletLogs.type} = 'urine' then 1 else 0 end)`,
+            fecesCount: sql<number>`sum(case when ${toiletLogs.type} = 'feces' then 1 else 0 end)`,
+          })
+          .from(toiletLogs)
+          .innerJoin(cats, eq(toiletLogs.catId, cats.id))
+          .where(and(...conditions))
+          .groupBy(periodKey)
+          .orderBy(periodKey),
+        (error) => {
+          console.error("[LogRepository.aggregateByPeriod]", error);
+          return DomainErrors.database(
+            "Failed to aggregate toilet logs by period"
+          );
         }
       );
     },
