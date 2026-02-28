@@ -12,10 +12,7 @@ import { LoginPage } from "./pages/login";
 import { CatsPage } from "./pages/cats";
 import { LogsPage } from "./pages/logs";
 import { HistoryPage } from "./pages/history";
-
-function DashboardPlaceholder() {
-  return <p>ダッシュボード</p>;
-}
+import { DashboardPage } from "./pages/dashboard";
 
 function App() {
   return (
@@ -30,7 +27,7 @@ function App() {
                 <Header />
                 <main className="container mx-auto px-4 py-8">
                   <Routes>
-                    <Route index element={<DashboardPlaceholder />} />
+                    <Route index element={<DashboardPage />} />
                     <Route path="cats" element={<CatsPage />} />
                     <Route path="logs" element={<LogsPage />} />
                     <Route path="history" element={<HistoryPage />} />

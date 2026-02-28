@@ -216,7 +216,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - _Requirements: WF8, WF9, WF10_
 
 - [ ] 10. ダッシュボード UI の実装
-- [ ] 10.1 ダッシュボードサマリーの実装
+- [x] 10.1 ダッシュボードサマリーの実装
   - ダッシュボードページ（DashboardPage）
   - 本日の全猫トイレ回数サマリー表示
   - 猫ごとの排尿・排便回数カード

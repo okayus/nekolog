@@ -13,6 +13,7 @@ import type {
   CreateLogInput,
   UpdateLogInput,
   PaginatedLogs,
+  DailySummary,
 } from "@nekolog/shared";
 
 const API_BASE = "/api";
@@ -131,5 +132,12 @@ export async function deleteLog(
     `${API_BASE}/logs/${id}?confirmed=${confirmed}`,
     { method: "DELETE" }
   );
+  return handleResponse(res);
+}
+
+// --- Stats ---
+
+export async function fetchDailySummary(): Promise<DailySummary> {
+  const res = await fetch(`${API_BASE}/stats/summary`);
   return handleResponse(res);
 }
