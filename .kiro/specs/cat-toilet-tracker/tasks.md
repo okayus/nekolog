@@ -127,7 +127,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - findWithFilters: ResultAsync<PaginatedLogs, DomainError>
   - _Requirements: WF7-10_
 
-- [ ] 5.2 トイレ記録ワークフローの実装（AddLog, UpdateLog, DeleteLog, GetHistory）
+- [x] 5.2 トイレ記録ワークフローの実装（AddLog, UpdateLog, DeleteLog, GetHistory）
   - addLog: 入力検証 → 猫存在確認 → 記録作成
   - updateLog: 記録存在確認 → 入力検証 → 更新
   - deleteLog: 確認フラグチェック → 記録存在確認 → 削除
@@ -135,7 +135,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - 各ワークフローは ResultAsync<T, DomainError> を返す
   - _Requirements: WF7-10_
 
-- [ ] 5.3 トイレ記録 API ルートの実装
+- [x] 5.3 トイレ記録 API ルートの実装
   - GET /api/logs → getHistory workflow → match
   - GET /api/logs/:id → getLog workflow → match
   - POST /api/logs → addLog workflow → match
