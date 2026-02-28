@@ -8,13 +8,27 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"placeholder test passed\""
+    "test": "vitest run"
   },
   "dependencies": {
-    "@nekolog/shared": "workspace:*"
+    "@nekolog/api": "workspace:^",
+    "@nekolog/shared": "workspace:*",
+    "hono": "^4.11.5",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260118.0",
+    "@tailwindcss/vite": "^4.2.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.4",
+    "jsdom": "^28.1.0",
+    "tailwindcss": "^4.2.1",
     "typescript": "^5.7.3",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "vitest": "^4.0.18"
   }
 }
