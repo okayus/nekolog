@@ -222,7 +222,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - 猫ごとの排尿・排便回数カード
   - _Requirements: WF11_
 
-- [ ] 10.2 統計グラフの実装
+- [x] 10.2 統計グラフの実装
   - Recharts による折れ線グラフ（動的インポート）
   - 期間セレクター（日別/週別/月別）
   - 猫選択による詳細統計表示
