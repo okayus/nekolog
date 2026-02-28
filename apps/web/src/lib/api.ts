@@ -5,7 +5,7 @@
  * Clerk セッションは Cookie で自動送信される。
  */
 
-import type { Cat, CreateCatInput } from "@nekolog/shared";
+import type { Cat, CreateCatInput, UpdateCatInput } from "@nekolog/shared";
 
 const API_BASE = "/api";
 
@@ -35,6 +35,29 @@ export async function createCat(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
+  return handleResponse(res);
+}
+
+export async function updateCat(
+  id: string,
+  data: UpdateCatInput
+): Promise<{ cat: Cat }> {
+  const res = await fetch(`${API_BASE}/cats/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
+
+export async function deleteCat(
+  id: string,
+  confirmed: boolean
+): Promise<{ success: boolean }> {
+  const res = await fetch(
+    `${API_BASE}/cats/${id}?confirmed=${confirmed}`,
+    { method: "DELETE" }
+  );
   return handleResponse(res);
 }
 
