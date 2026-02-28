@@ -19,7 +19,12 @@ export function LogsPage() {
 
   const queryClient = useQueryClient();
 
-  const { data: catsData, isLoading: catsLoading } = useQuery({
+  const {
+    data: catsData,
+    isLoading: catsLoading,
+    isError: catsError,
+    error: catsQueryError,
+  } = useQuery({
     queryKey: ["cats"],
     queryFn: fetchCats,
   });
@@ -70,7 +75,18 @@ export function LogsPage() {
   const displayError =
     validationError ?? (mutation.error ? getErrorMessage(mutation.error) : null);
 
-  if (!catsLoading && cats.length === 0) {
+  if (!catsLoading && catsError) {
+    return (
+      <div>
+        <h2 className="mb-6 text-xl font-bold">トイレ記録</h2>
+        <p className="text-sm text-red-600" role="alert">
+          {getErrorMessage(catsQueryError)}
+        </p>
+      </div>
+    );
+  }
+
+  if (!catsLoading && !catsError && cats.length === 0) {
     return (
       <div>
         <h2 className="mb-6 text-xl font-bold">トイレ記録</h2>

@@ -275,4 +275,23 @@ describe("LogsPage", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("should show error when cat fetch fails instead of empty state", async () => {
+    vi.spyOn(globalThis, "fetch").mockReturnValue(
+      createFetchResponse(
+        { type: "database", message: "DB error" },
+        500
+      )
+    );
+
+    renderWithProviders(<LogsPage />);
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByText(
+        "猫が登録されていません。先に猫を登録してください。"
+      )
+    ).not.toBeInTheDocument();
+  });
 });
