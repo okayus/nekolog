@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateLogSchema } from "@nekolog/shared";
-import type { ToiletLog } from "@nekolog/shared";
+import type { ToiletLog, UpdateLogInput } from "@nekolog/shared";
 import { fetchCats, fetchLogs, updateLog, deleteLog } from "../lib/api";
 import { getErrorMessage } from "../lib/error-display";
 
@@ -42,7 +42,7 @@ export function HistoryPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateLogInput }) =>
       updateLog(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["logs"] });
@@ -228,7 +228,7 @@ function EditLogDialog({
 }: {
   log: ToiletLog;
   onClose: () => void;
-  onSubmit: (data: Record<string, unknown>) => void;
+  onSubmit: (data: UpdateLogInput) => void;
   isPending: boolean;
 }) {
   const [type, setType] = useState<"urine" | "feces">(log.type);
@@ -240,7 +240,7 @@ function EditLogDialog({
     setError(null);
 
     const input: Record<string, unknown> = { type };
-    if (note) input["note"] = note;
+    input["note"] = note;
 
     const parsed = updateLogSchema.safeParse(input);
     if (!parsed.success) {

@@ -366,6 +366,45 @@ describe("HistoryPage", () => {
     });
   });
 
+  it("should submit note as empty string when clearing existing note", async () => {
+    const fetchSpy = mockFetch({
+      put: {
+        data: {
+          log: {
+            ...MOCK_LOGS.logs[1],
+            note: "",
+          },
+        },
+      },
+    });
+    renderWithProviders(<HistoryPage />);
+    await waitFor(() => {
+      expect(screen.getAllByRole("button", { name: "編集" })[1]!).toBeInTheDocument();
+    });
+
+    // Edit the second log (which has note "少し柔らかい")
+    await userEvent.click(screen.getAllByRole("button", { name: "編集" })[1]!);
+    await waitFor(() => {
+      expect(screen.getByText("記録を編集")).toBeInTheDocument();
+    });
+
+    const noteInput = screen.getByLabelText("メモ");
+    await userEvent.clear(noteInput);
+    await userEvent.click(screen.getByRole("button", { name: "更新する" }));
+
+    await waitFor(() => {
+      const putCall = fetchSpy.mock.calls.find(
+        (call) =>
+          typeof call[0] === "string" &&
+          call[0].includes("/api/logs/") &&
+          (call[1] as RequestInit)?.method === "PUT"
+      );
+      expect(putCall).toBeDefined();
+      const body = JSON.parse((putCall![1] as RequestInit).body as string);
+      expect(body).toHaveProperty("note", "");
+    });
+  });
+
   it("should show delete confirmation dialog", async () => {
     mockFetch();
     renderWithProviders(<HistoryPage />);
