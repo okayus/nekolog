@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Header } from "./components/header";
 import { ProtectedRoute } from "./lib/auth";
 import { LoginPage } from "./pages/login";
+import { CatsPage } from "./pages/cats";
 
 function DashboardPlaceholder() {
   return <p>ダッシュボード</p>;
@@ -28,6 +29,7 @@ function App() {
                 <main className="container mx-auto px-4 py-8">
                   <Routes>
                     <Route index element={<DashboardPlaceholder />} />
+                    <Route path="cats" element={<CatsPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>

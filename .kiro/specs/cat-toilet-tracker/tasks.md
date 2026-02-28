@@ -181,7 +181,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - _Requirements: WF1, WF2_
 
 - [ ] 8. 猫管理 UI の実装
-- [ ] 8.1 猫一覧・登録画面の実装
+- [x] 8.1 猫一覧・登録画面の実装
   - 猫一覧ページ（CatsPage）の作成
   - 猫カード コンポーネント（名前、写真、基本情報表示）
   - 猫登録フォーム（名前必須、オプション項目）
