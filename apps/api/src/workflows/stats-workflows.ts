@@ -217,19 +217,20 @@ export const getChartData = (
     const period = mapPeriod(validatedQuery.period);
 
     // If catId is specified, verify the cat exists
-    const catCheck = validatedQuery.catId
+    type CatInfo = { catId: string | null; catName: string | null };
+    const catCheck: ResultAsync<CatInfo, DomainError> = validatedQuery.catId
       ? catRepo.findById(validatedQuery.catId, userId).andThen((cat) => {
           if (!cat) {
-            return errAsync(
+            return errAsync<CatInfo, DomainError>(
               DomainErrors.notFound("cat", validatedQuery.catId!)
             );
           }
-          return okAsync({
+          return okAsync<CatInfo, DomainError>({
             catId: cat.id,
             catName: cat.name,
           });
         })
-      : okAsync({ catId: null as string | null, catName: null as string | null });
+      : okAsync<CatInfo, DomainError>({ catId: null, catName: null });
 
     return catCheck.andThen(({ catId, catName }) => {
       const logQuery = {
