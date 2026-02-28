@@ -140,3 +140,5 @@ export function StatsPage() {
     </div>
   );
 }
+
+export default StatsPage;
