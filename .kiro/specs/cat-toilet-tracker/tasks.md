@@ -235,7 +235,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - クイック記録ボタンのモバイル配置
   - _Requirements: NFR1_
 
-- [ ] 11.2 オフライン状態の通知
+- [x] 11.2 オフライン状態の通知
   - ネットワーク状態の検知
   - オフライン時のバナー表示
   - _Requirements: NFR2_
