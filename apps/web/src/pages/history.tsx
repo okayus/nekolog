@@ -73,7 +73,7 @@ export function HistoryPage() {
       <h2 className="mb-6 text-xl font-bold">トイレ記録履歴</h2>
 
       {/* Filters */}
-      <div className="mb-4 flex flex-wrap gap-4">
+      <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
         <div>
           <label htmlFor="filter-cat" className="block text-sm font-medium">
             猫で絞り込み
@@ -128,7 +128,7 @@ export function HistoryPage() {
           {logsData.logs.map((log) => (
             <div
               key={log.id}
-              className="flex items-center justify-between rounded border p-3"
+              className="flex flex-col gap-2 rounded border p-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -154,14 +154,14 @@ export function HistoryPage() {
                 <button
                   type="button"
                   onClick={() => setEditingLog(log)}
-                  className="rounded border px-3 py-1 text-sm hover:bg-gray-50"
+                  className="rounded border px-3 py-2 text-sm hover:bg-gray-50"
                 >
                   編集
                 </button>
                 <button
                   type="button"
                   onClick={() => setDeletingLog(log)}
-                  className="rounded border px-3 py-1 text-sm text-red-600 hover:bg-red-50"
+                  className="rounded border px-3 py-2 text-sm text-red-600 hover:bg-red-50"
                 >
                   削除
                 </button>

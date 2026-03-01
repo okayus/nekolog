@@ -54,7 +54,7 @@ export function StatsPage() {
       <h2 className="mb-6 text-xl font-bold">統計</h2>
 
       {/* Filters */}
-      <div className="mb-4 flex flex-wrap items-end gap-4">
+      <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
         {/* Period selector */}
         <div>
           <span className="block text-sm font-medium">期間</span>
