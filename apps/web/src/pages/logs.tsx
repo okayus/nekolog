@@ -109,7 +109,7 @@ export function LogsPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="mx-auto max-w-md space-y-4 rounded-lg border p-4"
+        className="mx-auto max-w-full space-y-4 rounded-lg border p-4 sm:max-w-md"
       >
         {successMessage && (
           <p className="text-sm text-green-600" role="status">

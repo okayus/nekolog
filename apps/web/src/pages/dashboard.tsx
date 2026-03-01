@@ -49,7 +49,7 @@ export function DashboardPage() {
           <p className="mb-4 text-sm text-gray-500">{summary.date}</p>
 
           {/* Total counts */}
-          <div data-testid="total-summary" className="mb-6 grid grid-cols-3 gap-4">
+          <div data-testid="total-summary" className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-lg border p-4 text-center">
               <p className="text-sm text-gray-500">合計</p>
               <p className="text-3xl font-bold">{summary.totalCount}</p>

@@ -8,6 +8,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Header } from "./components/header";
+import { QuickRecordFab } from "./components/quick-record-fab";
 import { ProtectedRoute } from "./lib/auth";
 import { LoginPage } from "./pages/login";
 import { CatsPage } from "./pages/cats";
@@ -38,6 +39,7 @@ function App() {
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>
+                <QuickRecordFab />
               </div>
             </ProtectedRoute>
           }

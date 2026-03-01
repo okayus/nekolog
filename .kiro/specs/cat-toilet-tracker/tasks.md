@@ -229,7 +229,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - _Requirements: WF11_
 
 - [ ] 11. レスポンシブ対応とオフライン通知
-- [ ] 11.1 モバイル最適化
+- [x] 11.1 モバイル最適化
   - 全ページのモバイルレスポンシブ対応
   - タッチ操作に最適化したUI調整
   - クイック記録ボタンのモバイル配置
