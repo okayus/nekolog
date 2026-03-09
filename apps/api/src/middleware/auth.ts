@@ -1,41 +1,48 @@
 /**
- * Clerk Authentication Middleware
+ * Authentication Middleware
  *
- * Provides authentication for API routes using Clerk.
+ * Provides authentication for API routes.
  * Injects the authenticated user's ID into the request context.
+ *
+ * Note: Phase 2 will replace this stub with full Better Auth session validation.
+ * Currently, the middleware is a passthrough placeholder after Clerk removal.
  */
 
-import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { createMiddleware } from "hono/factory";
 import { DomainErrors, type DomainError } from "@nekolog/shared";
 import type { Bindings, Variables } from "../types";
 
 /**
- * Clerk middleware that injects session into context.
- * This should be applied to all routes that need authentication.
+ * Authentication middleware placeholder.
+ * Phase 2 will implement Better Auth session validation here.
  */
-export const clerkAuth = () => clerkMiddleware();
+export const authMiddleware = () =>
+  createMiddleware<{
+    Bindings: Bindings;
+    Variables: Variables;
+  }>(async (_c, next) => {
+    await next();
+  });
 
 /**
  * Middleware that requires authentication.
  * Returns 401 Unauthorized if the user is not authenticated.
  * Sets userId in context variables for downstream handlers.
+ *
+ * Note: Phase 2 will replace the session extraction with Better Auth.
  */
 export const requireAuth = createMiddleware<{
   Bindings: Bindings;
   Variables: Variables;
 }>(async (c, next) => {
-  const auth = getAuth(c);
+  const userId = c.get("userId");
 
-  if (!auth?.userId) {
+  if (!userId) {
     const error: DomainError = DomainErrors.unauthorized(
       "認証が必要です。ログインしてください。"
     );
     return c.json({ error }, 401);
   }
-
-  // Set userId in context for downstream handlers
-  c.set("userId", auth.userId);
 
   await next();
 });

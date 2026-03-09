@@ -7,7 +7,7 @@
 
 import { Hono } from "hono";
 import type { Bindings, Variables } from "./types";
-import { clerkAuth, requireAuth } from "./middleware/auth";
+import { authMiddleware, requireAuth } from "./middleware/auth";
 import { createCatRoutes } from "./routes/cats";
 import { createLogRoutes } from "./routes/logs";
 import { createStatsRoutes } from "./routes/stats";
@@ -15,8 +15,8 @@ import { createStatsRoutes } from "./routes/stats";
 // Create Hono app with typed bindings
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-// Apply Clerk middleware to all routes
-app.use("*", clerkAuth());
+// Apply auth middleware to all routes (Phase 2: Better Auth session validation)
+app.use("*", authMiddleware());
 
 // Health check endpoint (public, no authentication required)
 app.get("/api/health", (c) => {

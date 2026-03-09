@@ -1,13 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Hono } from "hono";
 
-// Mock @hono/clerk-auth before importing app
-vi.mock("@hono/clerk-auth", () => ({
-  clerkMiddleware: () => async (_c: unknown, next: () => Promise<void>) =>
-    next(),
-  getAuth: vi.fn().mockReturnValue({ userId: "user_123" }),
-}));
-
 // Mock the cat repository
 const mockCatRepo = {
   create: vi.fn(),
@@ -85,8 +78,8 @@ describe("Log Routes", () => {
     DB: {} as D1Database,
     BUCKET: {} as R2Bucket,
     PUBLIC_BUCKET_URL: "https://images.example.com",
-    CLERK_SECRET_KEY: "test-secret",
-    CLERK_PUBLISHABLE_KEY: "test-publishable",
+    BETTER_AUTH_SECRET: "test-secret",
+    BETTER_AUTH_URL: "http://localhost:8787",
   };
 
   let app: Hono<{ Bindings: Bindings; Variables: Variables }>;
@@ -103,8 +96,12 @@ describe("Log Routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Create app with requireAuth and log routes
+    // Create app with simulated auth and log routes
     app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+    app.use("*", async (c, next) => {
+      c.set("userId", "user_123");
+      await next();
+    });
     app.use("*", requireAuth);
     app.route("/", createLogRoutes());
   });
