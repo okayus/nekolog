@@ -179,6 +179,39 @@ npx wrangler secret put CLERK_PUBLISHABLE_KEY --env production
 
 ---
 
+## Step 9: GitHub Actions 自動デプロイ（CI/CD）
+
+### 🌐 ブラウザ（GitHub リポジトリ設定）
+
+以下のシークレットを GitHub リポジトリの Settings → Secrets and variables → Actions に登録してください：
+
+| シークレット名 | 値 | 説明 |
+|--------------|---|------|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API トークン | Workers/Pages デプロイ用 |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID | `wrangler whoami` で確認可能 |
+| `VITE_CLERK_PUBLISHABLE_KEY` | `pk_live_...` | フロントエンドビルド用 Clerk キー |
+
+### Cloudflare API トークンの作成手順
+
+1. [Cloudflare ダッシュボード](https://dash.cloudflare.com/) → 右上のプロフィール → 「**My Profile**」
+2. 左メニュー「**API Tokens**」→「**Create Token**」
+3. 「**Edit Cloudflare Workers**」テンプレートを選択
+4. 権限に以下を追加：
+   - Account / Cloudflare Pages / Edit
+   - Account / D1 / Edit
+   - Account / R2 / Edit
+5. トークンを作成し、GitHub シークレットに登録
+
+### 動作
+
+`main` ブランチへの push 時に自動で以下が実行されます：
+
+1. **CI ジョブ**: typecheck → test → build
+2. **deploy-api ジョブ**: CI 成功後、Workers を `--env production` でデプロイ
+3. **deploy-web ジョブ**: CI 成功後、Pages にフロントエンドをデプロイ
+
+---
+
 ## 現在の進捗サマリー
 
 | ステップ | 状態 | 操作種別 |
@@ -190,4 +223,5 @@ npx wrangler secret put CLERK_PUBLISHABLE_KEY --env production
 | Step 5: Clerk シークレット | ✅ 完了（開発用キー） | ブラウザ + コマンド |
 | Step 6: Workers デプロイ | ✅ 完了 | コマンド |
 | Step 7: PUBLIC_BUCKET_URL | ⏳ 未設定 | 設定次第 |
-| Step 8: Clerk 本番切り替え | ⏳ 後日対応 | ブラウザ + コマンド |
+| Step 8: Clerk 本番切り替え | ✅ 完了 | ブラウザ + コマンド |
+| Step 9: GitHub Actions CI/CD | ⏳ シークレット登録が必要 | ブラウザ |
