@@ -247,7 +247,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - 環境変数とシークレットの設定
   - _Requirements: N/A（インフラ基盤）_
 
-- [ ] 12.2 GitHub Actions デプロイワークフローの構築
+- [x] 12.2 GitHub Actions デプロイワークフローの構築
   - .github/workflows/deploy.yml の作成
   - main ブランチマージ時の自動デプロイ
   - Workers と Pages の両方をデプロイ
