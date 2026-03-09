@@ -35,6 +35,7 @@ pnpm-debug.log*
 
 # Testing
 coverage/
+test-results/
 
 # Wrangler
 .wrangler/

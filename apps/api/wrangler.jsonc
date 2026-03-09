@@ -11,23 +11,51 @@
 
   // D1 Database binding
   // For local development, wrangler creates a local SQLite database
-  // For production, set database_id after creating the database
+  // For production, replace database_id with actual D1 database ID
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "nekolog-db",
       "database_id": "local"
     }
-  ]
+  ],
 
-  // R2 Bucket binding (will be configured after bucket creation)
-  // "r2_buckets": [
-  //   {
-  //     "binding": "BUCKET",
-  //     "bucket_name": "nekolog-images"
-  //   }
-  // ]
+  // R2 Bucket binding for cat image storage
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "nekolog-images"
+    }
+  ],
 
-  // Environment variables for Clerk (set via wrangler secret)
-  // CLERK_SECRET_KEY and CLERK_PUBLISHABLE_KEY should be set as secrets
+  // Environment variables
+  // Secrets (set via `wrangler secret put`):
+  //   - CLERK_SECRET_KEY
+  //   - CLERK_PUBLISHABLE_KEY
+  // Vars:
+  "vars": {
+    "PUBLIC_BUCKET_URL": "http://localhost:8787/images"
+  },
+
+  // Production environment overrides
+  "env": {
+    "production": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "nekolog-db",
+          "database_id": "dd8a7f08-831a-4f09-9b89-14db4e545ccf"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "BUCKET",
+          "bucket_name": "nekolog-images"
+        }
+      ],
+      "vars": {
+        "PUBLIC_BUCKET_URL": "PUBLIC_BUCKET_URL_HERE"
+      }
+    }
+  }
 }
