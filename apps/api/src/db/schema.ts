@@ -2,21 +2,90 @@
  * Drizzle ORM Schema for NekoLog
  *
  * Database schema for Cloudflare D1 (SQLite).
- * Defines tables for users, cats, and toilet logs.
+ * Defines tables for users, cats, toilet logs, and Better Auth tables.
  */
 
-import { sqliteTable, text, real, index } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, real, integer, index } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
 /**
  * Users table
- * Stores user information linked to Clerk authentication.
+ * Stores user information for Better Auth authentication.
  */
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
-  clerkId: text("clerk_id").unique().notNull(),
+  name: text("name"),
   email: text("email").notNull(),
+  emailVerified: integer("email_verified", { mode: "boolean" }),
+  image: text("image"),
   createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+/**
+ * Session table (Better Auth)
+ * Stores active user sessions.
+ */
+export const session = sqliteTable("session", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").unique().notNull(),
+  expiresAt: text("expires_at").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+/**
+ * Account table (Better Auth)
+ * Stores OAuth and credential accounts linked to users.
+ */
+export const account = sqliteTable("account", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  accessTokenExpiresAt: text("access_token_expires_at"),
+  refreshTokenExpiresAt: text("refresh_token_expires_at"),
+  scope: text("scope"),
+  idToken: text("id_token"),
+  password: text("password"),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+/**
+ * Verification table (Better Auth)
+ * Stores email verification and password reset tokens.
+ */
+export const verification = sqliteTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: text("expires_at").notNull(),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
     .notNull()
     .default(sql`(datetime('now'))`),
 });
@@ -78,6 +147,15 @@ export const toiletLogs = sqliteTable(
 // Type exports for use in repositories
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+
+export type Session = typeof session.$inferSelect;
+export type NewSession = typeof session.$inferInsert;
+
+export type Account = typeof account.$inferSelect;
+export type NewAccount = typeof account.$inferInsert;
+
+export type Verification = typeof verification.$inferSelect;
+export type NewVerification = typeof verification.$inferInsert;
 
 export type Cat = typeof cats.$inferSelect;
 export type NewCat = typeof cats.$inferInsert;
