@@ -15,6 +15,7 @@
     "@nekolog/api": "workspace:^",
     "@nekolog/shared": "workspace:*",
     "@tanstack/react-query": "^5.90.21",
+    "better-auth": "^1.5.4",
     "hono": "^4.11.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
