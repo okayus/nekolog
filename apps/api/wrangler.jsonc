@@ -44,7 +44,7 @@
         {
           "binding": "DB",
           "database_name": "nekolog-db",
-          "database_id": "DATABASE_ID_HERE"
+          "database_id": "dd8a7f08-831a-4f09-9b89-14db4e545ccf"
         }
       ],
       "r2_buckets": [
