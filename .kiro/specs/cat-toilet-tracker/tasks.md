@@ -241,7 +241,7 @@ Domain Modeling Made Functional + neverthrow による Railway Oriented Programm
   - _Requirements: NFR2_
 
 - [ ] 12. 本番デプロイ設定
-- [ ] 12.1 Cloudflare リソースのセットアップ
+- [x] 12.1 Cloudflare リソースのセットアップ
   - D1 データベースの作成（本番環境）
   - R2 バケットの作成
   - 環境変数とシークレットの設定
