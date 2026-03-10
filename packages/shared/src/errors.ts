@@ -15,6 +15,8 @@ export type DomainError =
   | { type: "validation"; field: string; message: string }
   | { type: "not_found"; resource: string; id: string }
   | { type: "unauthorized"; message: string }
+  | { type: "session_expired"; message: string }
+  | { type: "forbidden"; message: string }
   | { type: "confirmation_required" }
   | { type: "database"; message: string };
 
@@ -50,6 +52,24 @@ export const DomainErrors = {
    */
   unauthorized: (message: string): DomainError => ({
     type: "unauthorized",
+    message,
+  }),
+
+  /**
+   * Creates a session expired error for expired authentication sessions.
+   * @param message - Human-readable error message
+   */
+  sessionExpired: (message: string): DomainError => ({
+    type: "session_expired",
+    message,
+  }),
+
+  /**
+   * Creates a forbidden error for insufficient permissions.
+   * @param message - Human-readable error message
+   */
+  forbidden: (message: string): DomainError => ({
+    type: "forbidden",
     message,
   }),
 

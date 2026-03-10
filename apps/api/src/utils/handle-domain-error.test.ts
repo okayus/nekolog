@@ -67,6 +67,44 @@ describe("handleDomainError", () => {
     });
   });
 
+  describe("session_expired error", () => {
+    it("should return 401 with error details", async () => {
+      const app = new Hono();
+      app.get("/test", (c) => {
+        const error = DomainErrors.sessionExpired("セッションが期限切れです");
+        return handleDomainError(c, error);
+      });
+
+      const res = await app.request("/test");
+
+      expect(res.status).toBe(401);
+      const body = (await res.json()) as ApiErrorResponse;
+      expect(body.error).toEqual({
+        type: "session_expired",
+        message: "セッションが期限切れです",
+      });
+    });
+  });
+
+  describe("forbidden error", () => {
+    it("should return 403 with error details", async () => {
+      const app = new Hono();
+      app.get("/test", (c) => {
+        const error = DomainErrors.forbidden("この操作を行う権限がありません");
+        return handleDomainError(c, error);
+      });
+
+      const res = await app.request("/test");
+
+      expect(res.status).toBe(403);
+      const body = (await res.json()) as ApiErrorResponse;
+      expect(body.error).toEqual({
+        type: "forbidden",
+        message: "この操作を行う権限がありません",
+      });
+    });
+  });
+
   describe("confirmation_required error", () => {
     it("should return 422 with error details", async () => {
       const app = new Hono();

@@ -10,8 +10,8 @@ export function validateBindings(
   bindings: Bindings,
 ): Result<Bindings, string> {
   const requiredStrings: (keyof Bindings)[] = [
-    "CLERK_SECRET_KEY",
-    "CLERK_PUBLISHABLE_KEY",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
     "PUBLIC_BUCKET_URL",
   ];
 

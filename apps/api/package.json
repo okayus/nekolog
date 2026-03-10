@@ -14,9 +14,8 @@
     "db:migrate": "wrangler d1 migrations apply nekolog-db --local"
   },
   "dependencies": {
-    "@clerk/backend": "^2.29.5",
-    "@hono/clerk-auth": "^3.1.0",
     "@nekolog/shared": "workspace:*",
+    "better-auth": "^1.5.4",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.11.5",
     "neverthrow": "^8.2.0"

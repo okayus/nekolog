@@ -5,6 +5,15 @@
  * and domain error types used across the frontend and backend applications.
  */
 
+// Authentication Domain Types
+export {
+  type UserId,
+  type SessionId,
+  toUserId,
+  toSessionId,
+  type AuthState,
+} from "./auth";
+
 // Domain Errors (Railway Oriented Programming)
 export { type DomainError, DomainErrors, fromZodError } from "./errors";
 

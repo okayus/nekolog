@@ -23,6 +23,8 @@ export interface ApiErrorResponse {
  * - validation → 400 Bad Request
  * - not_found → 404 Not Found
  * - unauthorized → 401 Unauthorized
+ * - session_expired → 401 Unauthorized
+ * - forbidden → 403 Forbidden
  * - confirmation_required → 422 Unprocessable Entity
  * - database → 500 Internal Server Error (with generic message)
  *
@@ -42,7 +44,11 @@ export const handleDomainError = (
       return c.json<ApiErrorResponse>({ error }, 404);
 
     case "unauthorized":
+    case "session_expired":
       return c.json<ApiErrorResponse>({ error }, 401);
+
+    case "forbidden":
+      return c.json<ApiErrorResponse>({ error }, 403);
 
     case "confirmation_required":
       return c.json<ApiErrorResponse>({ error }, 422);

@@ -30,11 +30,11 @@
 
   // Environment variables
   // Secrets (set via `wrangler secret put`):
-  //   - CLERK_SECRET_KEY
-  //   - CLERK_PUBLISHABLE_KEY
+  //   - BETTER_AUTH_SECRET
   // Vars:
   "vars": {
-    "PUBLIC_BUCKET_URL": "http://localhost:8787/images"
+    "PUBLIC_BUCKET_URL": "http://localhost:8787/images",
+    "BETTER_AUTH_URL": "http://localhost:8787"
   },
 
   // Production environment overrides
@@ -54,7 +54,8 @@
         }
       ],
       "vars": {
-        "PUBLIC_BUCKET_URL": "PUBLIC_BUCKET_URL_HERE"
+        "PUBLIC_BUCKET_URL": "PUBLIC_BUCKET_URL_HERE",
+        "BETTER_AUTH_URL": "BETTER_AUTH_URL_HERE"
       }
     }
   }

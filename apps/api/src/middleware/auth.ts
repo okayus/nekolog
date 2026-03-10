@@ -1,41 +1,54 @@
 /**
- * Clerk Authentication Middleware
+ * Authentication Middleware
  *
- * Provides authentication for API routes using Clerk.
- * Injects the authenticated user's ID into the request context.
+ * Provides authentication for API routes using Better Auth.
+ * Validates session from request headers and injects userId into context.
  */
 
-import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { createMiddleware } from "hono/factory";
 import { DomainErrors, type DomainError } from "@nekolog/shared";
+import { createAuth } from "../lib/auth";
 import type { Bindings, Variables } from "../types";
 
 /**
- * Clerk middleware that injects session into context.
- * This should be applied to all routes that need authentication.
+ * Authentication middleware that validates Better Auth sessions.
+ * If a valid session exists, sets userId in context.
+ * Non-authenticated requests pass through (use requireAuth for protected routes).
  */
-export const clerkAuth = () => clerkMiddleware();
+export const authMiddleware = () =>
+  createMiddleware<{
+    Bindings: Bindings;
+    Variables: Variables;
+  }>(async (c, next) => {
+    const auth = createAuth(c.env);
+    const session = await auth.api.getSession({
+      headers: c.req.raw.headers,
+    });
+
+    if (session?.user) {
+      c.set("userId", session.user.id);
+    }
+
+    await next();
+  });
 
 /**
  * Middleware that requires authentication.
  * Returns 401 Unauthorized if the user is not authenticated.
- * Sets userId in context variables for downstream handlers.
+ * Must be applied after authMiddleware.
  */
 export const requireAuth = createMiddleware<{
   Bindings: Bindings;
   Variables: Variables;
 }>(async (c, next) => {
-  const auth = getAuth(c);
+  const userId = c.get("userId");
 
-  if (!auth?.userId) {
+  if (!userId) {
     const error: DomainError = DomainErrors.unauthorized(
       "認証が必要です。ログインしてください。"
     );
     return c.json({ error }, 401);
   }
-
-  // Set userId in context for downstream handlers
-  c.set("userId", auth.userId);
 
   await next();
 });

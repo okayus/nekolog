@@ -42,6 +42,28 @@ describe("DomainErrors", () => {
     });
   });
 
+  describe("sessionExpired", () => {
+    it("should create a session expired error with message", () => {
+      const error = DomainErrors.sessionExpired("セッションが期限切れです");
+
+      expect(error).toEqual({
+        type: "session_expired",
+        message: "セッションが期限切れです",
+      });
+    });
+  });
+
+  describe("forbidden", () => {
+    it("should create a forbidden error with message", () => {
+      const error = DomainErrors.forbidden("この操作を行う権限がありません");
+
+      expect(error).toEqual({
+        type: "forbidden",
+        message: "この操作を行う権限がありません",
+      });
+    });
+  });
+
   describe("confirmationRequired", () => {
     it("should create a confirmation required error", () => {
       const error = DomainErrors.confirmationRequired();

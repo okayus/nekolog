@@ -6,8 +6,8 @@ describe("validateBindings", () => {
     const bindings = {
       DB: {} as D1Database,
       BUCKET: {} as R2Bucket,
-      CLERK_SECRET_KEY: "sk_test_xxx",
-      CLERK_PUBLISHABLE_KEY: "pk_test_xxx",
+      BETTER_AUTH_SECRET: "test-secret",
+      BETTER_AUTH_URL: "http://localhost:8787",
       PUBLIC_BUCKET_URL: "https://images.example.com",
     };
 
@@ -15,35 +15,35 @@ describe("validateBindings", () => {
     expect(result.isOk()).toBe(true);
   });
 
-  it("should return err when CLERK_SECRET_KEY is missing", () => {
+  it("should return err when BETTER_AUTH_SECRET is missing", () => {
     const bindings = {
       DB: {} as D1Database,
       BUCKET: {} as R2Bucket,
-      CLERK_SECRET_KEY: "",
-      CLERK_PUBLISHABLE_KEY: "pk_test_xxx",
+      BETTER_AUTH_SECRET: "",
+      BETTER_AUTH_URL: "http://localhost:8787",
       PUBLIC_BUCKET_URL: "https://images.example.com",
     };
 
     const result = validateBindings(bindings);
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
-      expect(result.error).toContain("CLERK_SECRET_KEY");
+      expect(result.error).toContain("BETTER_AUTH_SECRET");
     }
   });
 
-  it("should return err when CLERK_PUBLISHABLE_KEY is missing", () => {
+  it("should return err when BETTER_AUTH_URL is missing", () => {
     const bindings = {
       DB: {} as D1Database,
       BUCKET: {} as R2Bucket,
-      CLERK_SECRET_KEY: "sk_test_xxx",
-      CLERK_PUBLISHABLE_KEY: "",
+      BETTER_AUTH_SECRET: "test-secret",
+      BETTER_AUTH_URL: "",
       PUBLIC_BUCKET_URL: "https://images.example.com",
     };
 
     const result = validateBindings(bindings);
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
-      expect(result.error).toContain("CLERK_PUBLISHABLE_KEY");
+      expect(result.error).toContain("BETTER_AUTH_URL");
     }
   });
 
@@ -51,16 +51,16 @@ describe("validateBindings", () => {
     const bindings = {
       DB: {} as D1Database,
       BUCKET: {} as R2Bucket,
-      CLERK_SECRET_KEY: "",
-      CLERK_PUBLISHABLE_KEY: "",
+      BETTER_AUTH_SECRET: "",
+      BETTER_AUTH_URL: "",
       PUBLIC_BUCKET_URL: "",
     };
 
     const result = validateBindings(bindings);
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
-      expect(result.error).toContain("CLERK_SECRET_KEY");
-      expect(result.error).toContain("CLERK_PUBLISHABLE_KEY");
+      expect(result.error).toContain("BETTER_AUTH_SECRET");
+      expect(result.error).toContain("BETTER_AUTH_URL");
       expect(result.error).toContain("PUBLIC_BUCKET_URL");
     }
   });
