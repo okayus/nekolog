@@ -12,9 +12,23 @@ import { createAuth } from "./lib/auth";
 import { createCatRoutes } from "./routes/cats";
 import { createLogRoutes } from "./routes/logs";
 import { createStatsRoutes } from "./routes/stats";
+import { validateBindings } from "./utils/env-validation";
 
 // Create Hono app with typed bindings
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+// Validate required environment variables on every request (fail-fast)
+app.use("*", async (c, next) => {
+  const result = validateBindings(c.env);
+  if (result.isErr()) {
+    console.error("[Configuration Error]", result.error);
+    return c.json(
+      { error: { type: "internal", message: "サーバー設定エラーが発生しました" } },
+      500
+    );
+  }
+  await next();
+});
 
 // Better Auth handler — must be before authMiddleware to allow unauthenticated access
 app.all("/api/auth/*", async (c) => {

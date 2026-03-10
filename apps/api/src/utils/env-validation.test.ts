@@ -61,8 +61,20 @@ describe("validateBindings", () => {
     if (result.isErr()) {
       expect(result.error).toContain("BETTER_AUTH_SECRET");
       expect(result.error).toContain("BETTER_AUTH_URL");
-      expect(result.error).toContain("PUBLIC_BUCKET_URL");
     }
+  });
+
+  it("should return ok when PUBLIC_BUCKET_URL is empty (not startup-required)", () => {
+    const bindings = {
+      DB: {} as D1Database,
+      BUCKET: {} as R2Bucket,
+      BETTER_AUTH_SECRET: "test-secret",
+      BETTER_AUTH_URL: "http://localhost:8787",
+      PUBLIC_BUCKET_URL: "",
+    };
+
+    const result = validateBindings(bindings);
+    expect(result.isOk()).toBe(true);
   });
 
   it("should return err when placeholder values ending with _HERE are present", () => {
@@ -71,7 +83,7 @@ describe("validateBindings", () => {
       BUCKET: {} as R2Bucket,
       BETTER_AUTH_SECRET: "test-secret",
       BETTER_AUTH_URL: "BETTER_AUTH_URL_HERE",
-      PUBLIC_BUCKET_URL: "PUBLIC_BUCKET_URL_HERE",
+      PUBLIC_BUCKET_URL: "",
     };
 
     const result = validateBindings(bindings);
@@ -79,7 +91,6 @@ describe("validateBindings", () => {
     if (result.isErr()) {
       expect(result.error).toContain("Placeholder values not replaced");
       expect(result.error).toContain("BETTER_AUTH_URL");
-      expect(result.error).toContain("PUBLIC_BUCKET_URL");
     }
   });
 });

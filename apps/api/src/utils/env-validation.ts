@@ -12,7 +12,6 @@ export function validateBindings(
   const requiredStrings: (keyof Bindings)[] = [
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
-    "PUBLIC_BUCKET_URL",
   ];
 
   const missing = requiredStrings.filter(

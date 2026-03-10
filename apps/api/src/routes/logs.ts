@@ -2,7 +2,7 @@
  * Toilet Log Management API Routes
  *
  * REST API endpoints for toilet log CRUD operations.
- * All routes require authentication via Clerk.
+ * All routes require authentication via Better Auth.
  */
 
 import { Hono } from "hono";

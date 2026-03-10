@@ -54,7 +54,7 @@
         }
       ],
       "vars": {
-        "PUBLIC_BUCKET_URL": "PUBLIC_BUCKET_URL_HERE",
+        "PUBLIC_BUCKET_URL": "",
         "BETTER_AUTH_URL": "https://nekolog.pages.dev"
       }
     }
