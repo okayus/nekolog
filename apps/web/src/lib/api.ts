@@ -1,8 +1,7 @@
 /**
  * API Client
  *
- * 型安全な API アクセス関数群。
- * Clerk セッションは Cookie で自動送信される。
+ * Better Auth の same-origin Cookie で認証セッションを自動送信する。
  */
 
 import type {
@@ -19,6 +18,13 @@ import type {
 
 const API_BASE = "/api";
 
+function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  return fetch(`${API_BASE}${path}`, {
+    ...init,
+    credentials: "same-origin",
+  });
+}
+
 async function handleResponse<T>(res: Response): Promise<T> {
   const body = await res.json();
   if (!res.ok) throw body;
@@ -28,19 +34,19 @@ async function handleResponse<T>(res: Response): Promise<T> {
 // --- Cats ---
 
 export async function fetchCats(): Promise<{ cats: Cat[] }> {
-  const res = await fetch(`${API_BASE}/cats`);
+  const res = await apiFetch("/cats");
   return handleResponse(res);
 }
 
 export async function fetchCat(id: string): Promise<{ cat: Cat }> {
-  const res = await fetch(`${API_BASE}/cats/${id}`);
+  const res = await apiFetch(`/cats/${id}`);
   return handleResponse(res);
 }
 
 export async function createCat(
   data: CreateCatInput
 ): Promise<{ cat: Cat }> {
-  const res = await fetch(`${API_BASE}/cats`, {
+  const res = await apiFetch("/cats", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -52,7 +58,7 @@ export async function updateCat(
   id: string,
   data: UpdateCatInput
 ): Promise<{ cat: Cat }> {
-  const res = await fetch(`${API_BASE}/cats/${id}`, {
+  const res = await apiFetch(`/cats/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -64,8 +70,8 @@ export async function deleteCat(
   id: string,
   confirmed: boolean
 ): Promise<{ success: boolean }> {
-  const res = await fetch(
-    `${API_BASE}/cats/${id}?confirmed=${confirmed}`,
+  const res = await apiFetch(
+    `/cats/${id}?confirmed=${confirmed}`,
     { method: "DELETE" }
   );
   return handleResponse(res);
@@ -77,7 +83,7 @@ export async function uploadCatImage(
 ): Promise<{ cat: Cat }> {
   const formData = new FormData();
   formData.append("image", file);
-  const res = await fetch(`${API_BASE}/cats/${catId}/image`, {
+  const res = await apiFetch(`/cats/${catId}/image`, {
     method: "POST",
     body: formData,
   });
@@ -89,7 +95,7 @@ export async function uploadCatImage(
 export async function createLog(
   data: CreateLogInput
 ): Promise<{ log: ToiletLog }> {
-  const res = await fetch(`${API_BASE}/logs`, {
+  const res = await apiFetch("/logs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -109,7 +115,7 @@ export async function fetchLogs(
     }
   }
   const qs = query.toString();
-  const res = await fetch(`${API_BASE}/logs${qs ? `?${qs}` : ""}`);
+  const res = await apiFetch(`/logs${qs ? `?${qs}` : ""}`);
   return handleResponse(res);
 }
 
@@ -117,7 +123,7 @@ export async function updateLog(
   id: string,
   data: UpdateLogInput
 ): Promise<{ log: ToiletLog }> {
-  const res = await fetch(`${API_BASE}/logs/${id}`, {
+  const res = await apiFetch(`/logs/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -129,8 +135,8 @@ export async function deleteLog(
   id: string,
   confirmed: boolean
 ): Promise<{ success: boolean }> {
-  const res = await fetch(
-    `${API_BASE}/logs/${id}?confirmed=${confirmed}`,
+  const res = await apiFetch(
+    `/logs/${id}?confirmed=${confirmed}`,
     { method: "DELETE" }
   );
   return handleResponse(res);
@@ -139,7 +145,7 @@ export async function deleteLog(
 // --- Stats ---
 
 export async function fetchDailySummary(): Promise<DailySummary> {
-  const res = await fetch(`${API_BASE}/stats/summary`);
+  const res = await apiFetch("/stats/summary");
   return handleResponse(res);
 }
 
@@ -155,6 +161,6 @@ export async function fetchChartData(
     }
   }
   const qs = query.toString();
-  const res = await fetch(`${API_BASE}/stats/chart${qs ? `?${qs}` : ""}`);
+  const res = await apiFetch(`/stats/chart${qs ? `?${qs}` : ""}`);
   return handleResponse(res);
 }
