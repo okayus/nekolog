@@ -8,12 +8,19 @@
 import { Hono } from "hono";
 import type { Bindings, Variables } from "./types";
 import { authMiddleware, requireAuth } from "./middleware/auth";
+import { createAuth } from "./lib/auth";
 import { createCatRoutes } from "./routes/cats";
 import { createLogRoutes } from "./routes/logs";
 import { createStatsRoutes } from "./routes/stats";
 
 // Create Hono app with typed bindings
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+// Better Auth handler — must be before authMiddleware to allow unauthenticated access
+app.all("/api/auth/*", async (c) => {
+  const auth = createAuth(c.env);
+  return auth.handler(c.req.raw);
+});
 
 // Apply Better Auth session validation to all routes
 app.use("*", authMiddleware());
