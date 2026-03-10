@@ -2,10 +2,18 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-vi.mock("@clerk/clerk-react", () => ({
-  UserButton: () => <div data-testid="clerk-user-button">UserButton</div>,
-  useAuth: () => ({ isLoaded: true, isSignedIn: true }),
-  SignIn: () => <div data-testid="clerk-sign-in">SignIn</div>,
+vi.mock("./hooks/use-auth-state", () => ({
+  useAuthState: () => ({
+    status: "authenticated",
+    userId: "user-123",
+    email: "test@example.com",
+  }),
+}));
+
+vi.mock("./lib/auth-client", () => ({
+  authClient: {
+    signOut: vi.fn().mockResolvedValue({}),
+  },
 }));
 
 import App from "./App";
