@@ -15,7 +15,7 @@ import { createStatsRoutes } from "./routes/stats";
 // Create Hono app with typed bindings
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-// Apply auth middleware to all routes (Phase 2: Better Auth session validation)
+// Apply Better Auth session validation to all routes
 app.use("*", authMiddleware());
 
 // Health check endpoint (public, no authentication required)
