@@ -443,6 +443,34 @@ describe("Cat Routes", () => {
       const body = (await res.json()) as { error: { type: string } };
       expect(body.error.type).toBe("internal");
     });
+
+    it("should return 500 when PUBLIC_BUCKET_URL is empty", async () => {
+      const envWithoutBucketUrl = { ...mockEnv, PUBLIC_BUCKET_URL: "" };
+      const req = new Request("http://localhost/cat_123/image", {
+        method: "POST",
+        body: new FormData(),
+      });
+      const res = await app.fetch(req, envWithoutBucketUrl);
+
+      expect(res.status).toBe(500);
+      const body = (await res.json()) as { error: { type: string; message: string } };
+      expect(body.error.type).toBe("internal");
+      expect(body.error.message).toBe("画像ストレージが設定されていません");
+    });
+
+    it("should return 500 when PUBLIC_BUCKET_URL is a placeholder value", async () => {
+      const envWithPlaceholder = { ...mockEnv, PUBLIC_BUCKET_URL: "PUBLIC_BUCKET_URL_HERE" };
+      const req = new Request("http://localhost/cat_123/image", {
+        method: "POST",
+        body: new FormData(),
+      });
+      const res = await app.fetch(req, envWithPlaceholder);
+
+      expect(res.status).toBe(500);
+      const body = (await res.json()) as { error: { type: string; message: string } };
+      expect(body.error.type).toBe("internal");
+      expect(body.error.message).toBe("画像ストレージが設定されていません");
+    });
   });
 
   describe("DELETE /:id/image", () => {
@@ -485,6 +513,21 @@ describe("Cat Routes", () => {
       expect(res.status).toBe(500);
       const body = (await res.json()) as { error: { type: string } };
       expect(body.error.type).toBe("internal");
+    });
+
+    it("should succeed even when PUBLIC_BUCKET_URL is empty", async () => {
+      const catWithoutImage = { ...mockCat, imageUrl: null };
+      vi.mocked(deleteCatImage).mockReturnValue(okAsync(catWithoutImage));
+
+      const envWithoutBucketUrl = { ...mockEnv, PUBLIC_BUCKET_URL: "" };
+      const req = new Request("http://localhost/cat_123/image", {
+        method: "DELETE",
+      });
+      const res = await app.fetch(req, envWithoutBucketUrl);
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { cat: typeof mockCat };
+      expect(body.cat.imageUrl).toBeNull();
     });
   });
 });

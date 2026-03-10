@@ -2,7 +2,7 @@
  * Statistics API Routes
  *
  * REST API endpoints for dashboard statistics.
- * All routes require authentication via Clerk.
+ * All routes require authentication via Better Auth.
  */
 
 import { Hono } from "hono";

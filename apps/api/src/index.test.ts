@@ -80,4 +80,31 @@ describe("NekoLog API", () => {
       expect(res.status).toBe(404);
     });
   });
+
+  describe("Environment validation", () => {
+    it("should return 500 for /api/health when BETTER_AUTH_SECRET is missing", async () => {
+      const badEnv = { ...mockEnv, BETTER_AUTH_SECRET: "" };
+      const res = await app.fetch(
+        new Request("http://localhost/api/health"),
+        badEnv
+      );
+
+      expect(res.status).toBe(500);
+      const body = (await res.json()) as { error: { type: string; message: string } };
+      expect(body.error.type).toBe("internal");
+      expect(body.error.message).toBe("サーバー設定エラーが発生しました");
+    });
+
+    it("should return 500 for /api/cats when BETTER_AUTH_SECRET is missing", async () => {
+      const badEnv = { ...mockEnv, BETTER_AUTH_SECRET: "" };
+      const res = await app.fetch(
+        new Request("http://localhost/api/cats"),
+        badEnv
+      );
+
+      expect(res.status).toBe(500);
+      const body = (await res.json()) as { error: { type: string; message: string } };
+      expect(body.error.type).toBe("internal");
+    });
+  });
 });

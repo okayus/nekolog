@@ -28,5 +28,5 @@ export interface Bindings {
  */
 export interface Variables {
   // User ID from authentication (set by requireAuth middleware)
-  userId?: string; // Phase 2 で AuthenticatedContext パターンに改善
+  userId?: string;
 }

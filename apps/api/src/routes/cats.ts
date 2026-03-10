@@ -2,7 +2,7 @@
  * Cat Management API Routes
  *
  * REST API endpoints for cat CRUD operations.
- * All routes require authentication via Clerk.
+ * All routes require authentication via Better Auth.
  */
 
 import { Hono } from "hono";
@@ -19,6 +19,14 @@ import {
   listCats,
 } from "../workflows/cat-workflows";
 import { uploadCatImage, deleteCatImage } from "../workflows/image-workflows";
+import type { ApiErrorResponse } from "../utils/handle-domain-error";
+
+/**
+ * Checks if PUBLIC_BUCKET_URL is configured with a valid value.
+ * Empty string or placeholder values ending with _HERE are considered unconfigured.
+ */
+const isPublicBucketUrlConfigured = (url: string): boolean =>
+  url.trim() !== "" && !url.endsWith("_HERE");
 
 /**
  * Cat routes factory.
@@ -119,6 +127,13 @@ export const createCatRoutes = () => {
    * Accepts multipart/form-data with an "image" field.
    */
   app.post("/:id/image", async (c) => {
+    if (!isPublicBucketUrlConfigured(c.env.PUBLIC_BUCKET_URL)) {
+      return c.json<ApiErrorResponse>(
+        { error: { type: "internal", message: "画像ストレージが設定されていません" } },
+        500
+      );
+    }
+
     const userId = getUserId(c);
     const catId = c.req.param("id");
     const catRepo = createCatRepository(c.env.DB);
