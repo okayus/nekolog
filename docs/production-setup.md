@@ -97,6 +97,24 @@ npx wrangler secret put BETTER_AUTH_SECRET --env production
 
 ---
 
+## Step 5.5: BETTER_AUTH_URL の設定
+
+### 🖥️ コマンド
+
+`apps/api/wrangler.jsonc` の `env.production.vars.BETTER_AUTH_URL` を、ユーザーがブラウザでアクセスする Pages の公開 URL に設定します:
+
+```jsonc
+"BETTER_AUTH_URL": "https://nekolog.pages.dev"
+```
+
+Better Auth はこの値をコールバック URL やリダイレクト URL の構築に使用します。Pages Functions proxy 経由でアクセスするため、Workers の URL ではなく **Pages の URL** を設定してください。
+
+> **注意**: カスタムドメインを設定した場合は、そのドメインに更新してから再デプロイが必要です。
+
+> **現在の設定値**: `https://nekolog.pages.dev`（設定済み）
+
+---
+
 ## Step 6: Workers デプロイ
 
 ### 🖥️ コマンド
@@ -204,6 +222,7 @@ npx wrangler deploy --env production
 | Step 3: マイグレーション | ✅ 完了 | コマンド |
 | Step 4: R2 有効化・作成 | ✅ 完了 | ブラウザ + コマンド |
 | Step 5: Better Auth シークレット | ⏳ 設定が必要 | コマンド |
+| Step 5.5: BETTER_AUTH_URL | ✅ 設定済み | コマンド |
 | Step 6: Workers デプロイ | ✅ 完了 | コマンド |
 | Step 7: PUBLIC_BUCKET_URL | ⏳ 未設定 | 設定次第 |
 | Step 8: Pages 環境変数 | ⏳ API_WORKER_URL の設定が必要 | ブラウザ |
