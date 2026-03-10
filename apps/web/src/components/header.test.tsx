@@ -3,8 +3,10 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
-vi.mock("@clerk/clerk-react", () => ({
-  UserButton: () => <div data-testid="clerk-user-button">UserButton</div>,
+vi.mock("../lib/auth-client", () => ({
+  authClient: {
+    signOut: vi.fn().mockResolvedValue({}),
+  },
 }));
 
 import { Header } from "./header";
@@ -20,14 +22,14 @@ describe("Header", () => {
     expect(screen.getByText("NekoLog")).toBeInTheDocument();
   });
 
-  it("should render the Clerk UserButton for logout", () => {
+  it("should render the logout button", () => {
     render(
       <MemoryRouter>
         <Header />
       </MemoryRouter>
     );
 
-    expect(screen.getByTestId("clerk-user-button")).toBeInTheDocument();
+    expect(screen.getByText("ログアウト")).toBeInTheDocument();
   });
 
   it("should render mobile menu toggle button", () => {
@@ -52,15 +54,12 @@ describe("Header", () => {
     const menuButton = screen.getByRole("button", { name: "メニュー" });
     const mobileNav = screen.getByTestId("mobile-nav");
 
-    // Initially hidden (has "hidden" class but always has "md:hidden")
     expect(mobileNav.classList.contains("hidden")).toBe(true);
 
-    // Click to open — "hidden" removed, "block" added
     await userEvent.click(menuButton);
     expect(mobileNav.classList.contains("hidden")).toBe(false);
     expect(mobileNav.classList.contains("block")).toBe(true);
 
-    // Click to close — "hidden" restored
     await userEvent.click(menuButton);
     expect(mobileNav.classList.contains("hidden")).toBe(true);
   });

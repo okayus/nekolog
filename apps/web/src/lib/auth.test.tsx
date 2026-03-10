@@ -2,98 +2,69 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 
-// Mock @clerk/clerk-react
-vi.mock("@clerk/clerk-react", () => ({
-  ClerkProvider: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
-  SignIn: () => <div data-testid="clerk-sign-in">SignIn</div>,
-  UserButton: () => <div data-testid="clerk-user-button">UserButton</div>,
-  useAuth: vi.fn(),
-  SignedIn: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  SignedOut: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+vi.mock("../hooks/use-auth-state", () => ({
+  useAuthState: vi.fn(),
 }));
 
-import { useAuth } from "@clerk/clerk-react";
+import { useAuthState } from "../hooks/use-auth-state";
 import { ProtectedRoute } from "./auth";
 
-const mockedUseAuth = vi.mocked(useAuth);
+const mockedUseAuthState = vi.mocked(useAuthState);
+
+function renderWithRouter(initialEntries: string[]) {
+  return render(
+    <MemoryRouter initialEntries={initialEntries}>
+      <Routes>
+        <Route path="/login" element={<div>Login Page</div>} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <div>Protected Content</div>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </MemoryRouter>
+  );
+}
 
 describe("ProtectedRoute", () => {
   it("should render children when authenticated", () => {
-    mockedUseAuth.mockReturnValue({
-      isLoaded: true,
-      isSignedIn: true,
-    } as ReturnType<typeof useAuth>);
+    mockedUseAuthState.mockReturnValue({
+      status: "authenticated",
+      userId: "user-123" as ReturnType<typeof useAuthState> extends { userId: infer U } ? U : never,
+      email: "test@example.com",
+    } as ReturnType<typeof useAuthState>);
 
-    render(
-      <MemoryRouter initialEntries={["/dashboard"]}>
-        <Routes>
-          <Route path="/login" element={<div>Login Page</div>} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <div>Protected Content</div>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
-    );
-
+    renderWithRouter(["/dashboard"]);
     expect(screen.getByText("Protected Content")).toBeInTheDocument();
   });
 
   it("should redirect to /login when not authenticated", () => {
-    mockedUseAuth.mockReturnValue({
-      isLoaded: true,
-      isSignedIn: false,
-    } as ReturnType<typeof useAuth>);
+    mockedUseAuthState.mockReturnValue({ status: "unauthenticated" });
 
-    render(
-      <MemoryRouter initialEntries={["/dashboard"]}>
-        <Routes>
-          <Route path="/login" element={<div>Login Page</div>} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <div>Protected Content</div>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
-    );
-
+    renderWithRouter(["/dashboard"]);
     expect(screen.getByText("Login Page")).toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
   });
 
   it("should show loading state while auth is loading", () => {
-    mockedUseAuth.mockReturnValue({
-      isLoaded: false,
-      isSignedIn: undefined,
-    } as ReturnType<typeof useAuth>);
+    mockedUseAuthState.mockReturnValue({ status: "loading" });
 
-    render(
-      <MemoryRouter initialEntries={["/dashboard"]}>
-        <Routes>
-          <Route path="/login" element={<div>Login Page</div>} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <div>Protected Content</div>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
-    );
-
+    renderWithRouter(["/dashboard"]);
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
     expect(screen.queryByText("Login Page")).not.toBeInTheDocument();
+  });
+
+  it("should redirect to /login with error state on error", () => {
+    mockedUseAuthState.mockReturnValue({
+      status: "error",
+      message: "Session expired",
+    });
+
+    renderWithRouter(["/dashboard"]);
+    expect(screen.getByText("Login Page")).toBeInTheDocument();
+    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
   });
 });

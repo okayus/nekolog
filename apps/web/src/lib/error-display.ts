@@ -17,6 +17,10 @@ export function getErrorMessage(error: unknown): string {
       return typeof e["resource"] === "string" ? `${e["resource"]}が見つかりません` : "リソースが見つかりません";
     case "unauthorized":
       return typeof e["message"] === "string" ? e["message"] : "認証が必要です";
+    case "session_expired":
+      return "セッションが期限切れです。再ログインしてください。";
+    case "forbidden":
+      return "この操作を行う権限がありません";
     case "confirmation_required":
       return "この操作には確認が必要です";
     case "database":

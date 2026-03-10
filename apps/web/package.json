@@ -7,11 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.functions.json",
     "test": "vitest run"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^5.61.3",
     "@nekolog/api": "workspace:^",
     "@nekolog/shared": "workspace:*",
     "@tanstack/react-query": "^5.90.21",

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { UserButton } from "@clerk/clerk-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { authClient } from "../lib/auth-client";
 
 const NAV_LINKS = [
   { to: "/cats", label: "猫の管理" },
@@ -15,6 +15,12 @@ const NAV_LINKS = [
  */
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <header className="border-b">
@@ -37,7 +43,13 @@ export function Header() {
           </nav>
         </div>
         <div className="flex items-center gap-3">
-          <UserButton />
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="rounded border px-3 py-1.5 text-sm hover:bg-gray-100"
+          >
+            ログアウト
+          </button>
           {/* Mobile menu toggle */}
           <button
             type="button"

@@ -23,5 +23,13 @@ export function validateBindings(
     return err(`Missing required environment variables: ${missing.join(", ")}`);
   }
 
+  const placeholders = requiredStrings.filter(
+    (key) => (bindings[key] as string).endsWith("_HERE"),
+  );
+
+  if (placeholders.length > 0) {
+    return err(`Placeholder values not replaced: ${placeholders.join(", ")}`);
+  }
+
   return ok(bindings);
 }

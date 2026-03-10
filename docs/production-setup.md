@@ -82,29 +82,36 @@ npx wrangler r2 bucket create nekolog-images
 
 ---
 
-## Step 5: Clerk シークレット設定
-
-### 🌐 ブラウザ
-
-1. [Clerk Dashboard](https://dashboard.clerk.com/) にログイン
-2. NekoLog アプリケーションを選択
-3. 「**API Keys**」から以下をコピー:
-   - **Secret key** (`sk_test_...` または `sk_live_...`)
-   - **Publishable key** (`pk_test_...` または `pk_live_...`)
+## Step 5: Better Auth シークレット設定
 
 ### 🖥️ コマンド
 
 ```bash
 cd apps/api
 
-# Secret Key を設定（プロンプトに値をペースト）
-npx wrangler secret put CLERK_SECRET_KEY --env production
-
-# Publishable Key を設定（プロンプトに値をペースト）
-npx wrangler secret put CLERK_PUBLISHABLE_KEY --env production
+# Better Auth のシークレットキーを設定（プロンプトに値をペースト）
+npx wrangler secret put BETTER_AUTH_SECRET --env production
 ```
 
-> **現在の状態**: 開発用キー（`sk_test_...` / `pk_test_...`）で設定済み。本番用キーへの差し替えは Step 8 参照。
+`BETTER_AUTH_SECRET` には十分に長いランダム文字列を設定してください（例: `openssl rand -base64 32` で生成）。
+
+---
+
+## Step 5.5: BETTER_AUTH_URL の設定
+
+### 🖥️ コマンド
+
+`apps/api/wrangler.jsonc` の `env.production.vars.BETTER_AUTH_URL` を、ユーザーがブラウザでアクセスする Pages の公開 URL に設定します:
+
+```jsonc
+"BETTER_AUTH_URL": "https://nekolog.pages.dev"
+```
+
+Better Auth はこの値をコールバック URL やリダイレクト URL の構築に使用します。Pages Functions proxy 経由でアクセスするため、Workers の URL ではなく **Pages の URL** を設定してください。
+
+> **注意**: カスタムドメインを設定した場合は、そのドメインに更新してから再デプロイが必要です。
+
+> **現在の設定値**: `https://nekolog.pages.dev`（設定済み）
 
 ---
 
@@ -157,25 +164,20 @@ npx wrangler deploy --env production
 
 ---
 
-## Step 8: Clerk 本番インスタンスへの切り替え（後日）
+## Step 8: Pages 環境変数の設定
 
 ### 🌐 ブラウザ
 
-1. [Clerk Dashboard](https://dashboard.clerk.com/) にログイン
-2. 左下の環境スイッチャーで「**Production**」を選択
-3. 本番インスタンスを作成（ドメイン設定が求められます）
-4. Workers の URL をドメインとして設定
-5. 「**API Keys**」から本番用キー (`sk_live_...` / `pk_live_...`) をコピー
+1. [Cloudflare ダッシュボード](https://dash.cloudflare.com/) にログイン
+2. 左メニュー「**Workers & Pages**」→ nekolog プロジェクトを選択
+3. 「**Settings**」→「**Environment variables**」
+4. Production 環境に以下を設定:
 
-### 🖥️ コマンド
+| 変数名 | 値 | 説明 |
+|--------|---|------|
+| `API_WORKER_URL` | `https://nekolog-api-production.{subdomain}.workers.dev` | Workers API の URL |
 
-```bash
-cd apps/api
-
-# 本番用キーで上書き
-npx wrangler secret put CLERK_SECRET_KEY --env production
-npx wrangler secret put CLERK_PUBLISHABLE_KEY --env production
-```
+この環境変数は Pages Functions proxy が Workers API にリクエストを転送するために使用します。
 
 ---
 
@@ -189,7 +191,6 @@ npx wrangler secret put CLERK_PUBLISHABLE_KEY --env production
 |--------------|---|------|
 | `CLOUDFLARE_API_TOKEN` | Cloudflare API トークン | Workers/Pages デプロイ用 |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID | `wrangler whoami` で確認可能 |
-| `VITE_CLERK_PUBLISHABLE_KEY` | `pk_live_...` | フロントエンドビルド用 Clerk キー |
 
 ### Cloudflare API トークンの作成手順
 
@@ -220,8 +221,9 @@ npx wrangler secret put CLERK_PUBLISHABLE_KEY --env production
 | Step 2: D1 作成 | ✅ 完了 | コマンド |
 | Step 3: マイグレーション | ✅ 完了 | コマンド |
 | Step 4: R2 有効化・作成 | ✅ 完了 | ブラウザ + コマンド |
-| Step 5: Clerk シークレット | ✅ 完了（開発用キー） | ブラウザ + コマンド |
+| Step 5: Better Auth シークレット | ⏳ 設定が必要 | コマンド |
+| Step 5.5: BETTER_AUTH_URL | ✅ 設定済み | コマンド |
 | Step 6: Workers デプロイ | ✅ 完了 | コマンド |
 | Step 7: PUBLIC_BUCKET_URL | ⏳ 未設定 | 設定次第 |
-| Step 8: Clerk 本番切り替え | ✅ 完了 | ブラウザ + コマンド |
+| Step 8: Pages 環境変数 | ⏳ API_WORKER_URL の設定が必要 | ブラウザ |
 | Step 9: GitHub Actions CI/CD | ⏳ シークレット登録が必要 | ブラウザ |

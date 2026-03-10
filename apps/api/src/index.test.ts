@@ -6,6 +6,7 @@ vi.mock("./lib/auth", () => ({
     api: {
       getSession: vi.fn().mockResolvedValue(null),
     },
+    handler: vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 })),
   }),
 }));
 
@@ -43,6 +44,29 @@ describe("NekoLog API", () => {
       );
 
       expect(res.headers.get("content-type")).toContain("application/json");
+    });
+  });
+
+  describe("GET /api/auth/*", () => {
+    it("should delegate to Better Auth handler without authentication", async () => {
+      const res = await app.fetch(
+        new Request("http://localhost/api/auth/session"),
+        mockEnv
+      );
+
+      // Should reach the handler (not 500 or middleware error)
+      expect(res.status).not.toBe(500);
+    });
+  });
+
+  describe("Protected API routes", () => {
+    it("should return 401 for unauthenticated requests to /api/cats", async () => {
+      const res = await app.fetch(
+        new Request("http://localhost/api/cats"),
+        mockEnv
+      );
+
+      expect(res.status).toBe(401);
     });
   });
 

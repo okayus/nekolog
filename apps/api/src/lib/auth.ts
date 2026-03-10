@@ -11,6 +11,7 @@ export const createAuth = (env: Bindings) => {
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
     emailAndPassword: { enabled: true },
+    basePath: "/api/auth",
   });
 };
 
