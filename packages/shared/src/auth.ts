@@ -23,4 +23,5 @@ export const toSessionId = (value: string): SessionId => value as SessionId;
 export type AuthState =
   | { status: "loading" }
   | { status: "unauthenticated" }
-  | { status: "authenticated"; userId: UserId; email: string };
+  | { status: "authenticated"; userId: UserId; email: string }
+  | { status: "error"; message: string };
